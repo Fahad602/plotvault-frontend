@@ -87,6 +87,7 @@ export default function NewLeadPage() {
 
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const payload = {
         ...formData,
         budgetRange: formData.budgetRange ? parseFloat(formData.budgetRange) : null,
