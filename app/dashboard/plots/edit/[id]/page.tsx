@@ -68,7 +68,7 @@ export default function EditPlotPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/plots/${plotId}`, {
+      const response = await fetch(`${apiUrl}/plots/${plotId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -146,7 +146,7 @@ export default function EditPlotPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/plots/${plotId}`, {
+      const response = await fetch(`${apiUrl}/plots/${plotId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

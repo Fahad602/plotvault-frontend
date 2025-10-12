@@ -61,7 +61,7 @@ export default function PaymentsPage() {
   const fetchPayments = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/v1/payments?page=1&limit=100`, {
+      const response = await fetch(`${apiUrl}/payments?page=1&limit=100`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },

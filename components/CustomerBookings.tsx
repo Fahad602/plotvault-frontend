@@ -93,7 +93,7 @@ export default function CustomerBookings({ customerId }: CustomerBookingsProps) 
   const fetchCustomerBookings = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/v1/customers/${customerId}/bookings`, {
+      const response = await fetch(`${apiUrl}/customers/${customerId}/bookings`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },

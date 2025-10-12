@@ -177,10 +177,10 @@ export default function Dashboard() {
       }
       
       const endpoint = isSalesManager() ? 'dashboard/sales-manager' : 'dashboard/stats';
-      console.log('Fetching dashboard data from:', `${apiUrl}/api/v1/${endpoint}`);
+      console.log('Fetching dashboard data from:', `${apiUrl}/${endpoint}`);
       console.log('Is sales manager:', isSalesManager());
       
-      const response = await fetch(`${apiUrl}/api/v1/${endpoint}`, {
+      const response = await fetch(`${apiUrl}/${endpoint}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

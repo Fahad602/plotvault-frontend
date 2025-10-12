@@ -97,7 +97,7 @@ export default function PaymentScheduleViewer({ bookingId }: PaymentScheduleView
   const fetchPaymentSchedule = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/v1/bookings/${bookingId}/payment-schedule`, {
+      const response = await fetch(`${apiUrl}/bookings/${bookingId}/payment-schedule`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
