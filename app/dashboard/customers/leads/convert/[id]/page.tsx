@@ -103,6 +103,7 @@ export default function ConvertLeadPage() {
 
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const response = await fetch(`${apiUrl}/leads/${leadId}/convert`, {
         method: 'POST',
         headers: {
