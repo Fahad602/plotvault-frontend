@@ -172,7 +172,7 @@ export default function PaymentPlansPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/payment-plans`, {
+      const response = await fetch(`${apiUrl}/payment-plans`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -211,8 +211,8 @@ export default function PaymentPlansPage() {
       };
 
       const url = editingPlan 
-        ? `${apiUrl}/api/v1/payment-plans/${editingPlan.id}`
-        : `${apiUrl}/api/v1/payment-plans`;
+        ? `${apiUrl}/payment-plans/${editingPlan.id}`
+        : `${apiUrl}/payment-plans`;
       
       const method = editingPlan ? 'PATCH' : 'POST';
 
@@ -270,7 +270,7 @@ export default function PaymentPlansPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/payment-plans/${id}`, {
+      const response = await fetch(`${apiUrl}/payment-plans/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

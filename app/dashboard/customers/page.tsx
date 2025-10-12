@@ -91,7 +91,7 @@ export default function CustomersPage() {
     try {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/v1/customers`, {
+      const response = await fetch(`${apiUrl}/customers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -126,9 +126,9 @@ export default function CustomersPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
       console.log('Deleting customer:', customerId, customerName);
-      console.log('API URL:', `${apiUrl}/api/v1/customers/${customerId}`);
+      console.log('API URL:', `${apiUrl}/customers/${customerId}`);
       
-      const response = await fetch(`${apiUrl}/api/v1/customers/${customerId}`, {
+      const response = await fetch(`${apiUrl}/customers/${customerId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

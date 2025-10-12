@@ -90,7 +90,7 @@ export default function PlotsPage() {
     try {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/v1/plots?limit=100`, {
+      const response = await fetch(`${apiUrl}/plots?limit=100`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -147,9 +147,9 @@ export default function PlotsPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      console.log('Making DELETE request to:', `${apiUrl}/api/v1/plots/${plotId}`);
+      console.log('Making DELETE request to:', `${apiUrl}/plots/${plotId}`);
       
-      const response = await fetch(`${apiUrl}/api/v1/plots/${plotId}`, {
+      const response = await fetch(`${apiUrl}/plots/${plotId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

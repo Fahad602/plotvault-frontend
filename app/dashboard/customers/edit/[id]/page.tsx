@@ -65,7 +65,7 @@ export default function EditCustomerPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/customers/${customerId}`, {
+      const response = await fetch(`${apiUrl}/customers/${customerId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -176,7 +176,7 @@ export default function EditCustomerPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/customers/${customerId}`, {
+      const response = await fetch(`${apiUrl}/customers/${customerId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

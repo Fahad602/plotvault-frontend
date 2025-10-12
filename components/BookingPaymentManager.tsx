@@ -82,7 +82,7 @@ export default function BookingPaymentManager({ bookingId }: BookingPaymentManag
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/bookings/${bookingId}/payments`, {
+      const response = await fetch(`${apiUrl}/bookings/${bookingId}/payments`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -102,7 +102,7 @@ export default function BookingPaymentManager({ bookingId }: BookingPaymentManag
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/bookings/${bookingId}/payments/summary`, {
+      const response = await fetch(`${apiUrl}/bookings/${bookingId}/payments/summary`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -127,7 +127,7 @@ export default function BookingPaymentManager({ bookingId }: BookingPaymentManag
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/bookings/${bookingId}/payments`, {
+      const response = await fetch(`${apiUrl}/bookings/${bookingId}/payments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -175,7 +175,7 @@ export default function BookingPaymentManager({ bookingId }: BookingPaymentManag
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/bookings/${bookingId}/payments/${paymentId}/proof`, {
+      const response = await fetch(`${apiUrl}/bookings/${bookingId}/payments/${paymentId}/proof`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

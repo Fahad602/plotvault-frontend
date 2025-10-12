@@ -103,7 +103,7 @@ export default function EditBookingPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/bookings/${bookingId}`, {
+      const response = await fetch(`${apiUrl}/bookings/${bookingId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -210,7 +210,7 @@ export default function EditBookingPage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/bookings/${bookingId}`, {
+      const response = await fetch(`${apiUrl}/bookings/${bookingId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

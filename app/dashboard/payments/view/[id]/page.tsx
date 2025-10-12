@@ -94,7 +94,7 @@ export default function ViewPaymentSchedulePage() {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      const response = await fetch(`${apiUrl}/api/v1/payment-schedules/${scheduleId}`, {
+      const response = await fetch(`${apiUrl}/payment-schedules/${scheduleId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

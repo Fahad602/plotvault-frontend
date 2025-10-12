@@ -124,13 +124,13 @@ export default function NewBookingPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
       const [customersResponse, plotsResponse, paymentPlansResponse] = await Promise.all([
-        fetch(`${apiUrl}/api/v1/customers`, {
+        fetch(`${apiUrl}/customers`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
-        fetch(`${apiUrl}/api/v1/plots?status=available`, {
+        fetch(`${apiUrl}/plots?status=available`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
-        fetch(`${apiUrl}/api/v1/payment-plans/active`, {
+        fetch(`${apiUrl}/payment-plans/active`, {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
       ]);
@@ -218,7 +218,7 @@ export default function NewBookingPage() {
         createdById: user?.id,
       };
       
-      const response = await fetch(`${apiUrl}/api/v1/bookings`, {
+      const response = await fetch(`${apiUrl}/bookings`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
