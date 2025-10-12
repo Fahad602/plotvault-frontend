@@ -154,6 +154,7 @@ export default function LeadsPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const response = await fetch(`${apiUrl}/leads/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -175,6 +176,7 @@ export default function LeadsPage() {
 
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const response = await fetch(`${apiUrl}/leads/${leadId}`, {
         method: 'DELETE',
         headers: {

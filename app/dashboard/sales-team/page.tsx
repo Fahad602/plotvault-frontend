@@ -105,6 +105,7 @@ export default function SalesTeamManagementPage() {
         const membersWithStats = await Promise.all(
           users.map(async (user: any) => {
             try {
+              const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
               const statsResponse = await fetch(`${apiUrl}/sales-activities/user/${user.id}/stats`, { headers });
               const activitiesResponse = await fetch(`${apiUrl}/sales-activities/user/${user.id}/activities?limit=1`, { headers });
               

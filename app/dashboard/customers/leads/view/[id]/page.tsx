@@ -189,6 +189,7 @@ export default function ViewLeadPage() {
   const fetchCommunications = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const response = await fetch(`${apiUrl}/leads/${leadId}/communications`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -207,6 +208,7 @@ export default function ViewLeadPage() {
   const fetchNotes = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const response = await fetch(`${apiUrl}/leads/${leadId}/notes`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -227,6 +229,7 @@ export default function ViewLeadPage() {
     
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const payload = {
         ...communicationForm,
         duration: communicationForm.duration ? parseInt(communicationForm.duration) : null,
@@ -272,6 +275,7 @@ export default function ViewLeadPage() {
     
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const payload = {
         ...noteForm,
         reminderAt: noteForm.reminderAt ? new Date(noteForm.reminderAt).toISOString() : null,
