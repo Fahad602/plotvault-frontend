@@ -219,7 +219,7 @@ export default function PlotMap() {
               {/* Map Image */}
               <div className="relative w-full h-full">
                 <Image
-                  src="/marketing_assets/WhatsApp Image 2025-07-29 at 1.54.38 PM.jpeg"
+                  src="/marketing_assets/WhatsApp Image 2025-07-26 at 1.04.12 AM.jpeg"
                   alt="Queen Hills Murree Master Plan"
                   fill
                   className="object-contain"
