@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       console.log('API URL:', apiUrl); // Debug log
+      console.log('Full URL:', `${apiUrl}/auth/me`); // Debug log
       const response = await fetch(`${apiUrl}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -84,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      console.log('API URL:', apiUrl); // Debug log
       console.log('Login API URL:', `${apiUrl}/auth/login`); // Debug log
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
