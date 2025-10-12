@@ -85,7 +85,7 @@ export default function RealPlotMap() {
     try {
       setIsLoading(true)
       const token = localStorage.getItem('access_token')
-      const apiUrl = 'http://localhost:3001/api/v1' // Hardcoded for now
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
       
       const response = await fetch(`${apiUrl}/plots?limit=100`, {
         headers: {

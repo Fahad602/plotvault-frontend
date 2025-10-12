@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const validateToken = async (token: string) => {
     try {
-      const apiUrl = 'http://localhost:3001/api/v1'; // Hardcoded for now
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       console.log('API URL:', apiUrl); // Debug log
       const response = await fetch(`${apiUrl}/auth/me`, {
         headers: {
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const apiUrl = 'http://localhost:3001/api/v1'; // Hardcoded for now
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       console.log('Login API URL:', `${apiUrl}/auth/login`); // Debug log
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
