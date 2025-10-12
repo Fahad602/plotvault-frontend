@@ -134,8 +134,8 @@ export default function SalesDashboard() {
       };
 
       // Fetch stats and activities in parallel
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const [statsResponse, activitiesResponse] = await Promise.all([
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
         fetch(`${apiUrl}/sales-activities/my-stats`, { headers }),
         fetch(`${apiUrl}/sales-activities/my-activities?limit=10`, { headers })
       ]);

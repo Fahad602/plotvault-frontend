@@ -81,8 +81,8 @@ export default function SalesPerformancePage() {
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - parseInt(selectedPeriod));
 
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const [metricsResponse, trendsResponse] = await Promise.all([
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
         fetch(`${apiUrl}/sales-activities/my-stats?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`, { headers }),
         fetch(`${apiUrl}/sales-activities/my-trends?days=${selectedPeriod}`, { headers })
       ]);
