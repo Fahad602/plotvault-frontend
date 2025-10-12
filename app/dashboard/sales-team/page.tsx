@@ -95,7 +95,8 @@ export default function SalesTeamManagementPage() {
       };
 
       // Fetch sales team members
-      const usersResponse = await fetch('http://localhost:3001/api/v1/users?role=sales_person', { headers });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const usersResponse = await fetch(`${apiUrl}/users?role=sales_person`, { headers });
       
       if (usersResponse.ok) {
         const users = await usersResponse.json();
@@ -104,8 +105,8 @@ export default function SalesTeamManagementPage() {
         const membersWithStats = await Promise.all(
           users.map(async (user: any) => {
             try {
-              const statsResponse = await fetch(`http://localhost:3001/api/v1/sales-activities/user/${user.id}/stats`, { headers });
-              const activitiesResponse = await fetch(`http://localhost:3001/api/v1/sales-activities/user/${user.id}/activities?limit=1`, { headers });
+              const statsResponse = await fetch(`${apiUrl}/sales-activities/user/${user.id}/stats`, { headers });
+              const activitiesResponse = await fetch(`${apiUrl}/sales-activities/user/${user.id}/activities?limit=1`, { headers });
               
               let stats = {
                 totalLeads: 0,

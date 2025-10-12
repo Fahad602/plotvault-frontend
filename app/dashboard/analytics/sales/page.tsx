@@ -63,7 +63,8 @@ export default function SalesAnalyticsPage() {
         'Content-Type': 'application/json',
       };
 
-      let url = 'http://localhost:3001/api/v1/analytics/sales';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      let url = `${apiUrl}/analytics/sales`;
       if (dateRange.startDate && dateRange.endDate) {
         url += `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
       }

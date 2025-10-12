@@ -67,7 +67,8 @@ export default function LeadAnalyticsPage() {
       };
 
       // Fetch leads data
-      const leadsResponse = await fetch('http://localhost:3001/api/v1/leads', { headers });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const leadsResponse = await fetch(`${apiUrl}/leads`, { headers });
       
       if (leadsResponse.ok) {
         const leadsData = await leadsResponse.json();

@@ -129,7 +129,8 @@ export default function LeadsPage() {
       if (sourceFilter) params.append('source', sourceFilter);
       if (priorityFilter) params.append('priority', priorityFilter);
 
-      const response = await fetch(`http://localhost:3001/api/v1/leads?${params}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -153,7 +154,7 @@ export default function LeadsPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/stats`, {
+      const response = await fetch(`${apiUrl}/leads/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -174,7 +175,7 @@ export default function LeadsPage() {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}`, {
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

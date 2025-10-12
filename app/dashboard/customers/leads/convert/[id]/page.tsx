@@ -52,7 +52,8 @@ export default function ConvertLeadPage() {
     try {
       setIsLoadingLead(true);
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -102,7 +103,7 @@ export default function ConvertLeadPage() {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}/convert`, {
+      const response = await fetch(`${apiUrl}/leads/${leadId}/convert`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

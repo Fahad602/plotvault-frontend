@@ -87,7 +87,8 @@ export default function TeamActivitiesPage() {
       };
 
       // Fetch team activities from dedicated endpoint
-      const response = await fetch('http://localhost:3001/api/v1/team-activities', { headers });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/team-activities`, { headers });
 
       if (response.ok) {
         const data = await response.json();

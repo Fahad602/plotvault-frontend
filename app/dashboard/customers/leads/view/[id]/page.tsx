@@ -165,7 +165,8 @@ export default function ViewLeadPage() {
     try {
       setIsLoadingLead(true);
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -188,7 +189,7 @@ export default function ViewLeadPage() {
   const fetchCommunications = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}/communications`, {
+      const response = await fetch(`${apiUrl}/leads/${leadId}/communications`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -206,7 +207,7 @@ export default function ViewLeadPage() {
   const fetchNotes = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}/notes`, {
+      const response = await fetch(`${apiUrl}/leads/${leadId}/notes`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -233,7 +234,7 @@ export default function ViewLeadPage() {
         nextFollowUpAt: communicationForm.nextFollowUpAt ? new Date(communicationForm.nextFollowUpAt).toISOString() : null,
       };
 
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}/communications`, {
+      const response = await fetch(`${apiUrl}/leads/${leadId}/communications`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -276,7 +277,7 @@ export default function ViewLeadPage() {
         reminderAt: noteForm.reminderAt ? new Date(noteForm.reminderAt).toISOString() : null,
       };
 
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}/notes`, {
+      const response = await fetch(`${apiUrl}/leads/${leadId}/notes`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -310,7 +311,8 @@ export default function ViewLeadPage() {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

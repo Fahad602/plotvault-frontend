@@ -72,7 +72,8 @@ export default function TeamAnalyticsPage() {
         'Content-Type': 'application/json',
       };
 
-      const response = await fetch('http://localhost:3001/api/v1/dashboard/sales-manager', { headers });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/dashboard/sales-manager`, { headers });
 
       if (response.ok) {
         const data = await response.json();

@@ -81,7 +81,8 @@ export default function EditLeadPage() {
     try {
       setIsLoadingLead(true);
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -120,7 +121,8 @@ export default function EditLeadPage() {
   const fetchSalesAgents = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/users?role=sales_agent`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/users?role=sales_agent`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -158,7 +160,8 @@ export default function EditLeadPage() {
         nextFollowUpAt: formData.nextFollowUpAt ? new Date(formData.nextFollowUpAt).toISOString() : null,
       };
 
-      const response = await fetch(`http://localhost:3001/api/v1/leads/${leadId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

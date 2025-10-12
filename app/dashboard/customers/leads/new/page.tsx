@@ -54,7 +54,8 @@ export default function NewLeadPage() {
   const fetchSalesAgents = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:3001/api/v1/users?role=sales_agent`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/users?role=sales_agent`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -92,7 +93,7 @@ export default function NewLeadPage() {
         generatedByUserId: user?.id,
       };
 
-      const response = await fetch(`http://localhost:3001/api/v1/leads`, {
+      const response = await fetch(`${apiUrl}/leads`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

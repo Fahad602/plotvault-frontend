@@ -84,7 +84,8 @@ export default function TeamPerformancePage() {
       };
 
       // Fetch team performance data from dedicated endpoint
-      const response = await fetch('http://localhost:3001/api/v1/sales-team/performance', { headers });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/sales-team/performance`, { headers });
 
       if (response.ok) {
         const data = await response.json();
