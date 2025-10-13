@@ -1,295 +1,198 @@
-# PlotVault Frontend
+# Queen Hills Murree - Frontend
 
-A modern, responsive frontend application for PlotVault - a comprehensive real estate management platform built with Next.js 14, TypeScript, and Tailwind CSS.
+A comprehensive frontend application for Queen Hills Murree real estate project management system.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-### Core Functionality
-- **Modern Dashboard**: Intuitive admin dashboard with real-time analytics
-- **Plot Management**: Complete plot lifecycle management (available, reserved, sold, transferred)
-- **Customer Management**: Comprehensive CRM system for customer relationships
-- **Booking System**: Advanced booking and payment management
-- **Financial Management**: Integrated accounting and payment tracking
-- **Document Management**: Secure document storage and sharing
-- **Communication Hub**: Built-in messaging and notification system
-- **Marketing Tools**: Lead generation and marketing automation
-- **Construction Management**: Project tracking and milestone management
-- **Analytics & Reporting**: Comprehensive business intelligence
+```bash
+# Install dependencies
+npm install
 
-### Technical Features
-- **Responsive Design**: Mobile-first approach with Tailwind CSS
-- **Type Safety**: Full TypeScript implementation
-- **Modern UI Components**: Custom components with accessibility support
-- **Real-time Updates**: Live data synchronization
-- **Interactive Maps**: Plot visualization with filtering
-- **Payment Integration**: Secure payment processing
-- **File Upload**: Drag-and-drop file management
-- **Search & Filtering**: Advanced search capabilities
-- **Data Visualization**: Charts and graphs for analytics
-- **Authentication**: Secure user authentication and authorization
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API URL
+
+# Start development server
+npm run dev
+```
+
+## 📚 Documentation
+
+For complete documentation, see [DOCUMENTATION.md](./DOCUMENTATION.md)
+
+## 🔧 Features
+
+- **Responsive Design**: Mobile-first approach with tablet and desktop optimization
+- **Authentication System**: JWT-based authentication with role-based access control
+- **Dashboard System**: Comprehensive dashboard with real-time statistics
+- **Lead Management**: Complete CRM interface for lead tracking and conversion
+- **Customer Management**: Customer profiles, bookings, and relationship management
+- **Plot Management**: Plot inventory, pricing, and interactive map
+- **Financial Management**: Payment tracking, financial reports, and analytics
+- **Team Management**: Team performance tracking and workload distribution
+- **CSV Import**: Bulk lead import functionality
+- **Real-time Updates**: Live dashboard statistics and notifications
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
+- **Framework**: Next.js 14 with TypeScript
 - **Styling**: Tailwind CSS
-- **UI Components**: Custom components with Radix UI primitives
 - **State Management**: React Context API
-- **HTTP Client**: Fetch API with custom hooks
-- **Form Handling**: React Hook Form with Zod validation
-- **Charts**: Chart.js with react-chartjs-2
-- **Maps**: Custom interactive plot maps
-- **Icons**: Lucide React
-- **Deployment**: Vercel
+- **Authentication**: JWT token-based
+- **Forms**: React Hook Form with validation
+- **Charts**: Chart.js for data visualization
+- **Maps**: Interactive plot map integration
 
-## 📦 Installation
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Git
-
-### Setup
-1. Clone the repository:
-```bash
-git clone https://github.com/Fahad602/plotvault-frontend.git
-cd plotvault-frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
-
-3. Create environment file:
-```bash
-cp .env.example .env.local
-```
-
-4. Configure environment variables:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
-NEXT_PUBLIC_APP_NAME=PlotVault
-NEXT_PUBLIC_APP_VERSION=1.0.0
-```
-
-5. Start the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
-frontend/
-├── app/                    # Next.js App Router pages
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/          # Dashboard pages
-│   │   ├── analytics/      # Analytics dashboard
-│   │   ├── bookings/       # Booking management
-│   │   ├── customers/      # Customer management
-│   │   ├── finance/        # Financial management
-│   │   ├── plots/          # Plot management
-│   │   ├── team/           # Team management
-│   │   └── settings/       # Settings pages
-│   ├── globals.css         # Global styles
-│   ├── layout.tsx          # Root layout
-│   └── page.tsx            # Home page
-├── components/             # Reusable components
-│   ├── auth/              # Authentication components
-│   ├── dashboard/          # Dashboard components
-│   ├── forms/              # Form components
-│   ├── ui/                 # UI primitives
-│   └── ...                 # Feature-specific components
-├── contexts/               # React contexts
-│   └── AuthContext.tsx     # Authentication context
-├── utils/                  # Utility functions
-│   └── currency.ts         # Currency formatting
-├── public/                 # Static assets
-│   ├── images/             # Image assets
-│   └── icons/              # Icon assets
-├── package.json            # Dependencies and scripts
-├── tailwind.config.js      # Tailwind configuration
-├── tsconfig.json           # TypeScript configuration
-└── next.config.js          # Next.js configuration
+app/
+├── auth/                    # Authentication pages
+├── dashboard/               # Dashboard pages
+│   ├── analytics/          # Analytics dashboard
+│   ├── bookings/           # Booking management
+│   ├── customers/          # Customer management
+│   ├── finance/            # Financial management
+│   ├── plots/              # Plot management
+│   └── team/               # Team management
+├── test-crm/               # CRM testing page
+└── layout.tsx              # Root layout
+
+components/
+├── auth/                   # Authentication components
+├── dashboard/              # Dashboard components
+├── BookingForm.tsx         # Booking form
+├── CSVUpload.tsx           # CSV upload component
+└── InteractivePlotMap.tsx  # Plot map component
+
+contexts/
+└── AuthContext.tsx         # Authentication context
+
+utils/
+└── currency.ts             # Currency formatting utilities
 ```
 
-## 🎨 UI Components
+## 🎨 Key Components
 
-### Design System
-- **Color Palette**: Modern, accessible color scheme
-- **Typography**: Consistent font hierarchy
-- **Spacing**: Tailwind CSS spacing system
-- **Components**: Reusable, accessible components
-- **Icons**: Lucide React icon library
-- **Responsive**: Mobile-first responsive design
+### Authentication
+- **AuthLayout**: Layout wrapper for authentication pages
+- **Login Form**: Email/password authentication with validation
 
-### Key Components
-- **Layout Components**: Header, Sidebar, Footer
-- **Form Components**: Input, Select, Textarea, Button
-- **Data Display**: Tables, Cards, Charts, Maps
-- **Navigation**: Breadcrumbs, Pagination, Tabs
-- **Feedback**: Alerts, Modals, Toasts
-- **Media**: Image galleries, File uploads
+### Dashboard
+- **DashboardLayout**: Main dashboard layout with sidebar navigation
+- **DashboardSidebar**: Navigation menu with role-based items
+- **DashboardHeader**: User profile dropdown and notifications
 
-## 🔧 Development
+### Business Components
+- **BookingForm**: Booking creation form with plot selection
+- **CSVUpload**: File upload component with validation
+- **InteractivePlotMap**: Interactive plot map with selection
+- **PaymentPlans**: Payment plan display with calculator
 
-### Available Scripts
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript check
+## 🔐 Authentication System
+
+The authentication system uses React Context for state management:
+
+```typescript
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  hasRole: (role: UserRole) => boolean;
+  // ... other methods
+}
 ```
 
-### Code Quality
-- **ESLint**: Code linting with Next.js rules
-- **TypeScript**: Type checking and safety
-- **Prettier**: Code formatting (configured)
-- **Husky**: Git hooks for quality checks
+### User Roles
+- `admin` - Full system access
+- `sales_manager` - Sales team management
+- `sales_person` - Lead management
+- `accountant` - Financial management
+- `investor` - Investment tracking
+- `buyer` - Customer portal
+- `auditor` - Audit access
 
-### Best Practices
-- **Component Structure**: Functional components with TypeScript
-- **State Management**: Context API for global state
-- **Error Handling**: Comprehensive error boundaries
-- **Performance**: Code splitting and lazy loading
-- **Accessibility**: WCAG 2.1 compliance
-- **SEO**: Meta tags and structured data
+## 📊 Dashboard Pages
+
+### Main Dashboard (`/dashboard`)
+- Overview statistics and recent activities
+- Quick actions and performance metrics
+
+### Analytics Dashboard (`/dashboard/analytics`)
+- Sales analytics and lead conversion rates
+- Team performance and financial metrics
+
+### Lead Management (`/dashboard/customers/leads`)
+- Lead list with filtering and search
+- Lead details, editing, and communication history
+
+### Customer Management (`/dashboard/customers`)
+- Customer list with search functionality
+- Customer profiles and booking history
+
+### Plot Management (`/dashboard/plots`)
+- Plot inventory with availability status
+- Plot details, editing, and interactive map
+
+### Financial Management (`/dashboard/finance`)
+- Payment tracking and financial reports
+- Expense management and revenue analytics
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+### Development
+```bash
+npm run dev
+```
 
-### Manual Deployment
+### Production
 ```bash
 npm run build
 npm run start
 ```
 
-### Environment Variables
-```env
-NEXT_PUBLIC_API_URL=https://your-backend-url.com/api/v1
-NEXT_PUBLIC_APP_NAME=PlotVault
-NEXT_PUBLIC_APP_VERSION=1.0.0
+### Vercel Deployment
+```bash
+npm i -g vercel
+vercel --prod
 ```
-
-## 📱 Responsive Design
-
-### Breakpoints
-- **Mobile**: 320px - 768px
-- **Tablet**: 768px - 1024px
-- **Desktop**: 1024px - 1440px
-- **Large Desktop**: 1440px+
-
-### Mobile Features
-- Touch-friendly interface
-- Swipe gestures
-- Mobile-optimized forms
-- Responsive navigation
-- Optimized images
-
-## 🔐 Security
-
-### Authentication
-- JWT token-based authentication
-- Secure token storage
-- Automatic token refresh
-- Role-based access control
-
-### Data Protection
-- Input validation and sanitization
-- XSS protection
-- CSRF protection
-- Secure HTTP headers
 
 ## 🧪 Testing
 
-### Testing Strategy
-- **Unit Tests**: Component testing with Jest
-- **Integration Tests**: API integration testing
-- **E2E Tests**: User journey testing
-- **Visual Tests**: Screenshot testing
+### Manual Testing
+Use the test CRM page (`/test-crm`) for:
+- Backend connection testing
+- Authentication testing
+- API endpoint testing
+- Feature validation
 
-### Running Tests
-```bash
-npm run test          # Run unit tests
-npm run test:e2e     # Run E2E tests
-npm run test:coverage # Run tests with coverage
-```
+## 📱 Mobile Support
 
-## 📊 Performance
+- **Responsive Breakpoints**: Mobile (< 768px), Tablet (768px - 1024px), Desktop (> 1024px)
+- **Touch-friendly Interfaces**: Swipe gestures and mobile-optimized forms
+- **Responsive Navigation**: Collapsible sidebar and mobile menu
 
-### Optimization Features
-- **Code Splitting**: Automatic route-based splitting
-- **Image Optimization**: Next.js Image component
-- **Lazy Loading**: Component and image lazy loading
-- **Caching**: Strategic caching strategies
-- **Bundle Analysis**: Webpack bundle analyzer
+## 🎨 Styling
 
-### Performance Metrics
-- **Lighthouse Score**: 90+ across all metrics
-- **First Contentful Paint**: < 1.5s
-- **Largest Contentful Paint**: < 2.5s
-- **Cumulative Layout Shift**: < 0.1
+- **Design System**: Consistent color palette and typography
+- **Tailwind CSS**: Utility-first CSS framework
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Component Library**: Reusable UI components
 
-## 🤝 Contributing
+## 🔒 Security
 
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- **Client-side Security**: Input validation and XSS prevention
+- **API Security**: JWT token authentication and role-based access
+- **Secure Storage**: Token storage and session management
 
-### Code Standards
-- Follow TypeScript best practices
-- Use meaningful variable names
-- Add JSDoc comments for complex functions
-- Follow the existing code style
-- Write tests for new features
+## 📞 Support
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-### Getting Help
-- **Documentation**: Check the docs folder
-- **Issues**: Create a GitHub issue
-- **Discussions**: Use GitHub discussions
-- **Email**: Contact the development team
-
-### Common Issues
-- **Build Errors**: Check Node.js version and dependencies
-- **TypeScript Errors**: Run `npm run type-check`
-- **Styling Issues**: Check Tailwind CSS configuration
-- **API Errors**: Verify backend connection and environment variables
-
-## 🔄 Updates
-
-### Version History
-- **v1.0.0**: Initial release with core features
-- **v1.1.0**: Added advanced analytics
-- **v1.2.0**: Enhanced mobile experience
-- **v1.3.0**: Improved performance and security
-
-### Roadmap
-- **v2.0.0**: Advanced AI features
-- **v2.1.0**: Mobile app integration
-- **v2.2.0**: Enhanced reporting
-- **v3.0.0**: Multi-tenant support
+For technical support or questions, please contact the development team.
 
 ---
 
-**PlotVault Frontend** - Modern real estate management made simple.
+**Version:** 1.0.0  
+**Last Updated:** October 13, 2025  
+**Maintainer:** Queen Hills Development Team

@@ -169,7 +169,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       
       if (!token) {
         console.error('No access token found in localStorage');
