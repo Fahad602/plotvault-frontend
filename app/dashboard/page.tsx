@@ -123,6 +123,13 @@ export default function Dashboard() {
       description: 'Add a new sales lead'
     },
     {
+      label: 'Import Leads',
+      href: '/dashboard/customers/leads?import=csv',
+      icon: Upload,
+      color: 'bg-emerald-600 hover:bg-emerald-700',
+      description: 'Import leads from CSV file'
+    },
+    {
       label: 'Create Booking',
       href: '/dashboard/bookings/new',
       icon: Calendar,

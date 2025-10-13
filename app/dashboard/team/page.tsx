@@ -286,20 +286,23 @@ export default function TeamManagement() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => router.push(`/dashboard/team/${member.id}/edit`)}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => router.push(`/dashboard/team/${member.id}/performance`)}
+                              onClick={() => router.push(`/dashboard/team/${member.id}`)}
                               className="text-green-600 hover:text-green-900"
+                              title="View Details"
                             >
                               <Eye className="h-4 w-4" />
                             </button>
                             <button
+                              onClick={() => router.push(`/dashboard/team/${member.id}/edit`)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Edit Member"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
                               onClick={() => handleRemoveMember(member.id)}
                               className="text-red-600 hover:text-red-900"
+                              title="Remove Member"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>

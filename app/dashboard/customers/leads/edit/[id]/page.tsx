@@ -15,6 +15,8 @@ import {
   DollarSign,
   Clock,
   Tag,
+  Search,
+  ChevronDown,
 } from 'lucide-react';
 
 interface User {
@@ -38,6 +40,11 @@ interface Lead {
   preferredContactMethod: string;
   preferredContactTime: string;
   assignedToUserId: string;
+  assignedToUser?: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
   nextFollowUpAt: string;
   tags: string[];
 }
@@ -51,6 +58,9 @@ export default function EditLeadPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingLead, setIsLoadingLead] = useState(true);
   const [salesAgents, setSalesAgents] = useState<User[]>([]);
+  const [currentAssignedAgent, setCurrentAssignedAgent] = useState<User | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -76,6 +86,23 @@ export default function EditLeadPage() {
       fetchSalesAgents();
     }
   }, [isAuthenticated, isLoading, leadId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   const fetchLead = async () => {
     try {
@@ -107,6 +134,11 @@ export default function EditLeadPage() {
           nextFollowUpAt: lead.nextFollowUpAt ? new Date(lead.nextFollowUpAt).toISOString().slice(0, 16) : '',
           tags: lead.tags || [],
         });
+        
+        // Set current assigned agent
+        if (lead.assignedToUser) {
+          setCurrentAssignedAgent(lead.assignedToUser);
+        }
       } else {
         console.error('Failed to fetch lead');
         router.push('/dashboard/customers/leads');
@@ -122,7 +154,7 @@ export default function EditLeadPage() {
     try {
       const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-      const response = await fetch(`${apiUrl}/users?role=sales_agent`, {
+      const response = await fetch(`${apiUrl}/users?role=sales_person`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -130,7 +162,7 @@ export default function EditLeadPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setSalesAgents(data.data || []);
+        setSalesAgents(data || []);
       }
     } catch (error) {
       console.error('Error fetching sales agents:', error);
@@ -159,6 +191,7 @@ export default function EditLeadPage() {
         budgetRange: formData.budgetRange ? parseFloat(formData.budgetRange) : null,
         nextFollowUpAt: formData.nextFollowUpAt ? new Date(formData.nextFollowUpAt).toISOString() : null,
       };
+
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       const response = await fetch(`${apiUrl}/leads/${leadId}`, {
@@ -215,6 +248,22 @@ export default function EditLeadPage() {
       addTag();
     }
   };
+
+  const handleAgentSelect = (agent: User) => {
+    setFormData(prev => ({
+      ...prev,
+      assignedToUserId: agent.id,
+    }));
+    setCurrentAssignedAgent(agent);
+    setIsDropdownOpen(false);
+    setSearchTerm('');
+  };
+
+  const filteredAgents = salesAgents.filter(agent =>
+    agent.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const isSalesManager = user?.role === 'admin' || user?.role === 'sales_manager';
 
   if (isLoading || isLoadingLead) {
     return (
@@ -418,20 +467,74 @@ export default function EditLeadPage() {
                 <label htmlFor="assignedToUserId" className="block text-sm font-medium text-gray-700 mb-1">
                   Assign to Sales Agent
                 </label>
-                <select
-                  id="assignedToUserId"
+                {isSalesManager ? (
+                  <div className="relative dropdown-container">
+                    <div
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer flex items-center justify-between"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <span className={currentAssignedAgent ? 'text-gray-900' : 'text-gray-500'}>
+                        {currentAssignedAgent ? currentAssignedAgent.fullName : 'Select sales agent'}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </div>
+                    
+                    {isDropdownOpen && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                        <div className="p-2 border-b border-gray-200">
+                          <div className="relative">
+                            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                            <input
+                              type="text"
+                              placeholder="Search agents..."
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredAgents.length > 0 ? (
+                            filteredAgents.map((agent) => (
+                              <div
+                                key={agent.id}
+                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                                onClick={() => handleAgentSelect(agent)}
+                              >
+                                <User className="w-4 h-4 text-gray-400 mr-2" />
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">{agent.fullName}</div>
+                                  <div className="text-xs text-gray-500">{agent.email}</div>
+                                </div>
+                                {currentAssignedAgent?.id === agent.id && (
+                                  <div className="ml-auto">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                              No agents found
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                    {currentAssignedAgent ? currentAssignedAgent.fullName : 'No agent assigned'}
+                  </div>
+                )}
+                
+                {/* Hidden input to ensure assignedToUserId is included in form submission */}
+                <input
+                  type="hidden"
                   name="assignedToUserId"
                   value={formData.assignedToUserId}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select sales agent</option>
-                  {salesAgents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.fullName}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>

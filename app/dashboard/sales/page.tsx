@@ -135,8 +135,17 @@ export default function SalesDashboard() {
 
       // Fetch stats and activities in parallel
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      
+      // Use different endpoints based on user role
+      let statsEndpoint;
+      if (user?.role === 'sales_manager') {
+        statsEndpoint = `${apiUrl}/sales-team/manager-stats`;
+      } else {
+        statsEndpoint = `${apiUrl}/sales-team/agent-stats`;
+      }
+      
       const [statsResponse, activitiesResponse] = await Promise.all([
-        fetch(`${apiUrl}/sales-activities/my-stats`, { headers }),
+        fetch(statsEndpoint, { headers }),
         fetch(`${apiUrl}/sales-activities/my-activities?limit=10`, { headers })
       ]);
 
@@ -146,16 +155,16 @@ export default function SalesDashboard() {
         
         // Transform backend stats to frontend format
         const transformedStats: SalesStats = {
-          totalLeads: statsData.leadsCreated || 0,
-          convertedLeads: statsData.leadsConverted || 0,
-          totalCustomers: statsData.customersCreated || 0,
-          totalBookings: statsData.bookingsCreated || 0,
-          totalRevenue: statsData.totalPotentialValue || 0,
-          pendingFollowUps: 0, // This would need a separate API call
+          totalLeads: statsData.totalLeads || statsData.leadsCreated || 0,
+          convertedLeads: statsData.convertedLeads || statsData.leadsConverted || 0,
+          totalCustomers: statsData.totalCustomers || statsData.customersCreated || 0,
+          totalBookings: statsData.totalBookings || statsData.bookingsCreated || 0,
+          totalRevenue: statsData.totalRevenue || statsData.totalPotentialValue || 0,
+          pendingFollowUps: statsData.pendingFollowUps || 0,
           callsMade: statsData.callsMade || 0,
           emailsSent: statsData.emailsSent || 0,
-          meetingsScheduled: statsData.meetingsHeld || 0,
-          conversionRate: statsData.leadsCreated > 0 ? (statsData.leadsConverted / statsData.leadsCreated) * 100 : 0,
+          meetingsScheduled: statsData.meetingsScheduled || statsData.meetingsHeld || 0,
+          conversionRate: statsData.conversionRate || (statsData.totalLeads > 0 ? (statsData.convertedLeads / statsData.totalLeads) * 100 : 0) || (statsData.leadsCreated > 0 ? (statsData.leadsConverted / statsData.leadsCreated) * 100 : 0),
         };
 
         setStats(transformedStats);

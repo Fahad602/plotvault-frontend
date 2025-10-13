@@ -326,25 +326,28 @@ export default function NewLeadPage() {
                 </select>
               </div>
 
-              <div>
-                <label htmlFor="assignedToUserId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Assign to Sales Agent
-                </label>
-                <select
-                  id="assignedToUserId"
-                  name="assignedToUserId"
-                  value={formData.assignedToUserId}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select sales agent</option>
-                  {salesAgents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.fullName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Only show assignment field for managers and admins */}
+              {(user?.role === 'admin' || user?.role === 'sales_manager') && (
+                <div>
+                  <label htmlFor="assignedToUserId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Assign to Sales Agent
+                  </label>
+                  <select
+                    id="assignedToUserId"
+                    name="assignedToUserId"
+                    value={formData.assignedToUserId}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select sales agent</option>
+                    {salesAgents.map((agent) => (
+                      <option key={agent.id} value={agent.id}>
+                        {agent.fullName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

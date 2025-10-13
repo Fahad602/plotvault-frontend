@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Plus,
   Search,
@@ -23,8 +23,19 @@ import {
   Users,
   Target,
   BarChart3,
+  Upload,
+  ChevronDown,
+  Flag,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import CSVUpload from '@/components/CSVUpload';
+
+interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+}
 
 interface Lead {
   id: string;
@@ -95,9 +106,193 @@ const sourceIcons = {
   other: AlertCircle,
 };
 
+interface AgentDropdownProps {
+  lead: Lead;
+  salesAgents: User[];
+  onReassign: (leadId: string, newAgentId: string) => void;
+}
+
+function AgentDropdown({ lead, salesAgents, onReassign }: AgentDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredAgents = salesAgents.filter(agent =>
+    agent.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAgentSelect = (agent: User) => {
+    if (agent.id !== lead.assignedToUser?.id) {
+      onReassign(lead.id, agent.id);
+    }
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.agent-dropdown-container')) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="relative agent-dropdown-container">
+      <div
+        className="flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <User className="w-4 h-4 text-gray-400 mr-2" />
+        <span className="text-sm text-gray-900">
+          {lead.assignedToUser ? lead.assignedToUser.fullName : 'Unassigned'}
+        </span>
+        <ChevronDown className="w-3 h-3 text-gray-400 ml-1" />
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg">
+          <div className="p-2 border-b border-gray-200">
+            <div className="relative">
+              <Search className="w-3 h-3 absolute left-2 top-2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search agents..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+          <div className="max-h-32 overflow-y-auto">
+            <div
+              className="px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 cursor-pointer"
+              onClick={() => handleAgentSelect({ id: '', fullName: 'Unassigned', email: '', role: '' })}
+            >
+              Unassigned
+            </div>
+            {filteredAgents.map((agent) => (
+              <div
+                key={agent.id}
+                className="px-2 py-1 text-xs hover:bg-gray-100 cursor-pointer flex items-center"
+                onClick={() => handleAgentSelect(agent)}
+              >
+                <User className="w-3 h-3 text-gray-400 mr-2" />
+                <span className={lead.assignedToUser?.id === agent.id ? 'font-medium text-blue-600' : ''}>
+                  {agent.fullName}
+                </span>
+                {lead.assignedToUser?.id === agent.id && (
+                  <div className="ml-auto">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// PriorityDropdown Component
+interface PriorityDropdownProps {
+  lead: Lead;
+  onUpdatePriority: (leadId: string, newPriority: string) => void;
+}
+
+function PriorityDropdown({ lead, onUpdatePriority }: PriorityDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const priorities = [
+    { value: 'low', label: 'Low', color: 'bg-gray-100 text-gray-800' },
+    { value: 'medium', label: 'Medium', color: 'bg-blue-100 text-blue-800' },
+    { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
+    { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' },
+  ];
+
+  const currentPriority = priorities.find(p => p.value === lead.priority) || priorities[1];
+
+  const handlePrioritySelect = (priority: string) => {
+    if (priority !== lead.priority) {
+      onUpdatePriority(lead.id, priority);
+    }
+    setIsOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.priority-dropdown-container')) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="relative priority-dropdown-container">
+      <div
+        className="flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Flag className="w-4 h-4 text-gray-400 mr-2" />
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${currentPriority.color}`}>
+          {currentPriority.label}
+        </span>
+        <ChevronDown className="w-3 h-3 text-gray-400 ml-1" />
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-10 mt-1 w-32 bg-white border border-gray-300 rounded-lg shadow-lg">
+          <div className="max-h-32 overflow-y-auto">
+            {priorities.map((priority) => (
+              <div
+                key={priority.value}
+                className="px-2 py-1 text-xs hover:bg-gray-100 cursor-pointer flex items-center"
+                onClick={() => handlePrioritySelect(priority.value)}
+              >
+                <Flag className="w-3 h-3 text-gray-400 mr-2" />
+                <span className={lead.priority === priority.value ? 'font-medium text-blue-600' : ''}>
+                  {priority.label}
+                </span>
+                {lead.priority === priority.value && (
+                  <div className="ml-auto">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LeadsPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<LeadStats | null>(null);
   const [isLoadingLeads, setIsLoadingLeads] = useState(true);
@@ -105,20 +300,86 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
+  const [agentFilter, setAgentFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showCSVUpload, setShowCSVUpload] = useState(false);
+  const [salesAgents, setSalesAgents] = useState<User[]>([]);
 
   useEffect(() => {
+    console.log('🔄 useEffect triggered:', {
+      isAuthenticated,
+      isLoading,
+      userRole: user?.role,
+      userId: user?.id,
+      currentPage,
+      searchTerm,
+      statusFilter,
+      sourceFilter,
+      priorityFilter,
+      agentFilter
+    });
+    
     if (isAuthenticated && !isLoading) {
+      console.log('✅ Conditions met, fetching data...');
       fetchLeads();
       fetchStats();
+      
+      // Fetch sales agents for managers
+      if (user?.role === 'admin' || user?.role === 'sales_manager') {
+        fetchSalesAgents();
+      }
+      
+      // Check if import=csv query parameter is present
+      const importParam = searchParams.get('import');
+      if (importParam === 'csv' && (user?.role === 'admin' || user?.role === 'sales_manager')) {
+        setShowCSVUpload(true);
+      }
+    } else {
+      console.log('❌ Conditions not met:', {
+        isAuthenticated,
+        isLoading,
+        reason: !isAuthenticated ? 'not authenticated' : 'still loading'
+      });
     }
-  }, [isAuthenticated, isLoading, currentPage, searchTerm, statusFilter, sourceFilter, priorityFilter]);
+  }, [isAuthenticated, isLoading, currentPage, searchTerm, statusFilter, sourceFilter, priorityFilter, agentFilter, searchParams, user]);
+
+  // Refresh data when page becomes visible (e.g., returning from edit page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isAuthenticated && !isLoading) {
+        fetchLeads();
+        fetchStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isAuthenticated, isLoading]);
 
   const fetchLeads = async () => {
     try {
       setIsLoadingLeads(true);
       const token = localStorage.getItem('access_token');
+      
+      // Debug token
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          console.log('🔑 Token info:', {
+            userId: payload.userId,
+            role: payload.role,
+            email: payload.email,
+            exp: new Date(payload.exp * 1000),
+            expired: payload.exp < Date.now() / 1000
+          });
+        } catch (e) {
+          console.log('🔑 Token decode error:', e);
+        }
+      } else {
+        console.log('🔑 No token found');
+      }
+      
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '20',
@@ -128,24 +389,82 @@ export default function LeadsPage() {
       if (statusFilter) params.append('status', statusFilter);
       if (sourceFilter) params.append('source', sourceFilter);
       if (priorityFilter) params.append('priority', priorityFilter);
+      if (agentFilter) params.append('assignedToUserId', agentFilter);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-      const response = await fetch(`${apiUrl}/leads?${params}`, {
+      const url = `${apiUrl}/leads?${params}`;
+      
+      console.log('🔍 Fetching leads:', {
+        url,
+        userRole: user?.role,
+        userId: user?.id,
+        token: token ? 'present' : 'missing'
+      });
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('📡 Leads API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Leads Data:', {
+          leadsCount: data.data?.length || 0,
+          totalPages: data.pagination?.pages || 0,
+          pagination: data.pagination,
+          rawData: data
+        });
+        
+        if (data.data && data.data.length > 0) {
+          console.log('✅ Leads found:', data.data.slice(0, 3).map(lead => ({
+            id: lead.id,
+            name: lead.fullName,
+            email: lead.email,
+            status: lead.status
+          })));
+        } else {
+          console.log('❌ No leads in data.data:', data);
+        }
+        
+        console.log('📝 Setting leads state:', {
+          leadsCount: data.data?.length || 0,
+          totalPages: data.pagination?.pages || 0,
+          firstLead: data.data?.[0] ? {
+            id: data.data[0].id,
+            name: data.data[0].fullName,
+            email: data.data[0].email
+          } : null
+        });
+        
         setLeads(data.data);
         setTotalPages(data.pagination.pages);
       } else {
-        console.error('Failed to fetch leads');
+        const errorData = await response.text();
+        console.error('❌ Failed to fetch leads:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        
+        // Handle authentication errors
+        if (response.status === 401 || response.status === 403) {
+          console.log('🔐 Authentication error - redirecting to login');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          router.push('/auth/login');
+          return;
+        }
       }
     } catch (error) {
-      console.error('Error fetching leads:', error);
+      console.error('💥 Error fetching leads:', error);
     } finally {
       setIsLoadingLeads(false);
     }
@@ -168,6 +487,85 @@ export default function LeadsPage() {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchSalesAgents = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/users?role=sales_person`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSalesAgents(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching sales agents:', error);
+    }
+  };
+
+  const reassignLead = async (leadId: string, newAgentId: string) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignedToUserId: newAgentId,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh the leads list
+        fetchLeads();
+        fetchStats();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to reassign lead');
+      }
+    } catch (error) {
+      console.error('Error reassigning lead:', error);
+      alert('Error reassigning lead');
+    }
+  };
+
+  // updateLeadPriority function
+  const updateLeadPriority = async (leadId: string, newPriority: string) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/${leadId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priority: newPriority,
+        }),
+      });
+
+      if (response.ok) {
+        // Refresh the leads list
+        fetchLeads();
+        fetchStats();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update lead priority');
+      }
+    } catch (error) {
+      console.error('Error updating lead priority:', error);
+      alert('Error updating lead priority');
     }
   };
 
@@ -229,14 +627,42 @@ export default function LeadsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Lead Management</h1>
           <p className="text-gray-600">Manage your sales leads and track conversions</p>
         </div>
-        <button
-          onClick={() => router.push('/dashboard/customers/leads/new')}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add New Lead
-        </button>
+        <div className="flex gap-3">
+          {(user?.role === 'admin' || user?.role === 'sales_manager') && (
+            <button
+              onClick={() => setShowCSVUpload(!showCSVUpload)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Import CSV
+            </button>
+          )}
+          <button
+            onClick={() => router.push('/dashboard/customers/leads/new')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add New Lead
+          </button>
+        </div>
       </div>
+
+      {/* CSV Upload Section */}
+      {showCSVUpload && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <CSVUpload 
+            onUploadComplete={(result) => {
+              console.log('CSV upload completed:', result);
+              // Refresh leads list after successful import
+              if (result.success) {
+                fetchLeads();
+                fetchStats();
+                setShowCSVUpload(false);
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (
@@ -309,7 +735,7 @@ export default function LeadsPage() {
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
             <input
@@ -362,6 +788,20 @@ export default function LeadsPage() {
             <option value="high">High</option>
             <option value="urgent">Urgent</option>
           </select>
+          {(user?.role === 'admin' || user?.role === 'sales_manager') && (
+            <select
+              value={agentFilter}
+              onChange={(e) => setAgentFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Agents</option>
+              {salesAgents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.fullName}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
@@ -375,6 +815,9 @@ export default function LeadsPage() {
           <div className="text-center p-8">
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">No leads found</p>
+            <div className="mt-4 text-xs text-gray-300">
+              Debug: leads.length = {leads.length}, isLoadingLeads = {isLoadingLeads.toString()}
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -455,9 +898,20 @@ export default function LeadsPage() {
                             <div className="text-sm font-medium text-gray-900 capitalize">
                               {lead.source.replace('_', ' ')}
                             </div>
-                            {lead.sourceDetails && (
-                              <div className="text-xs text-gray-500">{lead.sourceDetails}</div>
-                            )}
+                            {lead.sourceDetails && (() => {
+                              try {
+                                const sourceData = JSON.parse(lead.sourceDetails);
+                                return (
+                                  <div className="text-xs text-gray-500">
+                                    {sourceData.campaignId || sourceData.campaignName || 'Campaign'}
+                                  </div>
+                                );
+                              } catch (e) {
+                                return (
+                                  <div className="text-xs text-gray-500">{lead.sourceDetails}</div>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                       </td>
@@ -468,14 +922,23 @@ export default function LeadsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${priorityColors[lead.priority]}`}>
-                          {lead.priority}
-                        </span>
+                        <PriorityDropdown
+                          lead={lead}
+                          onUpdatePriority={updateLeadPriority}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {lead.assignedToUser ? lead.assignedToUser.fullName : 'Unassigned'}
-                        </div>
+                        {(user?.role === 'admin' || user?.role === 'sales_manager') ? (
+                          <AgentDropdown
+                            lead={lead}
+                            salesAgents={salesAgents}
+                            onReassign={reassignLead}
+                          />
+                        ) : (
+                          <div className="text-sm text-gray-900">
+                            {lead.assignedToUser ? lead.assignedToUser.fullName : 'Unassigned'}
+                          </div>
+                        )}
                         {lead.generatedByUser && (
                           <div className="text-xs text-gray-500">
                             Generated by {lead.generatedByUser.fullName}

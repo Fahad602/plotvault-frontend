@@ -65,14 +65,9 @@ const getMenuItemsForRole = (role: UserRole): MenuItem[] => {
       icon: Target,
     },
     {
-      label: 'Leads Management',
+      label: 'My Leads',
       href: '/dashboard/customers/leads',
       icon: Search,
-      children: [
-        { label: 'All Leads', href: '/dashboard/customers/leads', icon: Search },
-        { label: 'Add Lead', href: '/dashboard/customers/leads/new', icon: Target },
-        { label: 'My Leads', href: '/dashboard/customers/leads?assigned=me', icon: UserCheck },
-      ],
     },
     {
       label: 'Customer Management',
@@ -142,7 +137,6 @@ const getMenuItemsForRole = (role: UserRole): MenuItem[] => {
       icon: Search,
       children: [
         { label: 'All Leads', href: '/dashboard/customers/leads', icon: Search },
-        { label: 'Add Lead', href: '/dashboard/customers/leads/new', icon: Target },
         { label: 'Assign Leads', href: '/dashboard/customers/leads/assign', icon: UserCheck },
       ],
     },
