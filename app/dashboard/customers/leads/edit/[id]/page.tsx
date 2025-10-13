@@ -22,7 +22,8 @@ import {
 interface User {
   id: string;
   fullName: string;
-  role: string;
+  email: string;
+  role?: string; // Make role optional since it might not always be included
 }
 
 interface Lead {

@@ -424,7 +424,7 @@ export default function LeadsPage() {
         });
         
         if (data.data && data.data.length > 0) {
-          console.log('✅ Leads found:', data.data.slice(0, 3).map(lead => ({
+          console.log('✅ Leads found:', data.data.slice(0, 3).map((lead: any) => ({
             id: lead.id,
             name: lead.fullName,
             email: lead.email,
