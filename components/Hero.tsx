@@ -23,17 +23,6 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-green-900 to-slate-800">
-      {/* Background Image/Video */}
-      <div className="absolute inset-0 z-0">
-        <div 
-          className="w-full h-full bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('/marketing_assets/WhatsApp Image 2025-07-26 at 1.04.12 AM.jpeg')"
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30"></div>
-        </div>
-      </div>
 
       {/* Content */}
       <div className="relative z-10 text-center text-white container mx-auto px-4">
