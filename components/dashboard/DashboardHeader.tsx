@@ -22,9 +22,8 @@ export default function DashboardHeader() {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
+    <header className="fixed top-4 left-4 right-4 bg-white rounded-2xl shadow-xl border border-gray-100 z-30 h-16 backdrop-blur-sm">
+      <div className="px-6 h-full flex items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
@@ -88,7 +87,6 @@ export default function DashboardHeader() {
               )}
             </div>
           </div>
-        </div>
       </div>
     </header>
   );

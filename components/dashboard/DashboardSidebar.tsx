@@ -31,7 +31,6 @@ import {
   Database,
   Globe,
   MapPin,
-  Home,
   Wrench,
   Briefcase,
   Target,
@@ -362,9 +361,10 @@ export default function DashboardSidebar() {
   const menuItems = user?.role ? getMenuItemsForRole(user.role) : [];
 
   return (
-    <aside className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen">
-      <nav className="p-4">
-        <ul className="space-y-2">
+    <aside className="fixed left-4 top-24 bottom-4 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 z-30 flex flex-col backdrop-blur-sm">
+      {/* Scrollable Navigation */}
+      <nav className="flex-1 overflow-y-auto scrollbar-thin p-4 pt-4">
+        <ul className="space-y-1">
           {menuItems.map((item) => {
             const hasChildren = item.children && item.children.length > 0;
             const isItemActive = isActive(item.href) || (hasChildren && item.children?.some(child => isActive(child.href)));
@@ -375,35 +375,35 @@ export default function DashboardSidebar() {
                   <div>
                     <button
                       onClick={() => toggleExpanded(item.label)}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                         isItemActive
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? 'bg-primary-50 text-primary-700 shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <item.icon className="h-5 w-5" />
+                        <item.icon className={`h-5 w-5 ${isItemActive ? 'text-primary-600' : 'text-gray-500'}`} />
                         <span>{item.label}</span>
                       </div>
                       {isExpanded(item.label) ? (
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isItemActive ? 'text-primary-600' : 'text-gray-400'}`} />
                       ) : (
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className={`h-4 w-4 transition-transform ${isItemActive ? 'text-primary-600' : 'text-gray-400'}`} />
                       )}
                     </button>
                     {isExpanded(item.label) && (
-                      <ul className="mt-2 ml-6 space-y-1">
+                      <ul className="mt-1 ml-8 space-y-0.5 border-l-2 border-gray-100 pl-3">
                         {item.children?.map((child) => (
                           <li key={child.href}>
                             <Link
                               href={child.href}
-                              className={`flex items-center space-x-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+                              className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-all duration-200 ${
                                 isActive(child.href)
-                                  ? 'bg-primary-50 text-primary-700'
-                                  : 'text-gray-600 hover:bg-gray-100'
+                                  ? 'bg-primary-50 text-primary-700 font-medium border-l-2 border-primary-600 -ml-3 pl-4'
+                                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                               }`}
                             >
-                              <child.icon className="h-4 w-4" />
+                              <child.icon className={`h-3.5 w-3.5 ${isActive(child.href) ? 'text-primary-600' : 'text-gray-400'}`} />
                               <span>{child.label}</span>
                             </Link>
                           </li>
@@ -414,13 +414,13 @@ export default function DashboardSidebar() {
                 ) : (
                   <Link
                     href={item.href}
-                    className={`flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    className={`flex items-center space-x-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                       isActive(item.href)
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-primary-50 text-primary-700 shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className={`h-5 w-5 ${isActive(item.href) ? 'text-primary-600' : 'text-gray-500'}`} />
                     <span>{item.label}</span>
                   </Link>
                 )}
@@ -429,6 +429,14 @@ export default function DashboardSidebar() {
           })}
         </ul>
       </nav>
+
+      {/* Sidebar Footer */}
+      <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3 rounded-b-2xl">
+        <div className="text-xs text-gray-500 text-center">
+          <p className="font-medium text-gray-700">{user?.fullName}</p>
+          <p className="text-gray-500 capitalize">{user?.role?.replace('_', ' ')}</p>
+        </div>
+      </div>
     </aside>
   );
 } 

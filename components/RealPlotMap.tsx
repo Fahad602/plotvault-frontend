@@ -14,7 +14,10 @@ import {
   Home,
   Layers,
   Download,
-  RefreshCw
+  RefreshCw,
+  Plus,
+  X,
+  Save
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -30,6 +33,10 @@ interface Plot {
   coordinates: string
   mapX: number
   mapY: number
+  imageBounds?: string // JSON string: {x, y, width, height}
+  imagePath?: string
+  imageWidth?: number
+  imageHeight?: number
   createdAt: string
   updatedAt: string
 }
@@ -75,6 +82,25 @@ export default function RealPlotMap() {
   const [isLoading, setIsLoading] = useState(true)
   const mapRef = useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  
+  // Add plot mode
+  const [isAddMode, setIsAddMode] = useState(false)
+  const [clickedPoint, setClickedPoint] = useState<{ x: number; y: number } | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newPlotData, setNewPlotData] = useState({
+    plotNumber: '',
+    block: '',
+    phase: '1',
+    sizeMarla: 5.0,
+    sizeSqm: 126.45,
+    pricePkr: 0,
+    status: 'available' as 'available' | 'reserved' | 'sold' | 'transferred',
+    imageBounds: '',
+    imagePath: '/plot-map.png',
+    imageWidth: 2068,
+    imageHeight: 1312,
+  })
+  const [isSaving, setIsSaving] = useState(false)
 
   // Fetch plots from API
   useEffect(() => {
@@ -152,16 +178,40 @@ export default function RealPlotMap() {
     }
   }
 
-  // Get plot rectangle properties
+  // Get plot rectangle properties from image coordinates
   const getPlotRect = (plot: Plot) => {
+    // If imageBounds is available, use it (preferred method)
+    if (plot.imageBounds && plot.imageWidth && plot.imageHeight) {
+      try {
+        const bounds = JSON.parse(plot.imageBounds)
+        // Convert pixel coordinates to percentage
+        return {
+          x: (bounds.x / plot.imageWidth) * 100,
+          y: (bounds.y / plot.imageHeight) * 100,
+          width: (bounds.width / plot.imageWidth) * 100,
+          height: (bounds.height / plot.imageHeight) * 100
+        }
+      } catch (e) {
+        console.warn(`Failed to parse imageBounds for plot ${plot.plotNumber}:`, e)
+      }
+    }
+    
+    // Fallback to old coordinate system
     const coords = parseCoordinates(plot.coordinates)
     return {
       x: plot.mapX || coords.x,
       y: plot.mapY || coords.y,
-      width: coords.width,
-      height: coords.height
+      width: coords.width || 5,
+      height: coords.height || 5
     }
   }
+
+  // Get the map image path from plots (use first plot's imagePath, or default)
+  const mapImagePath = plots.length > 0 && plots[0].imagePath 
+    ? plots[0].imagePath.startsWith('/') 
+      ? plots[0].imagePath 
+      : `/${plots[0].imagePath}`
+    : '/plot-map.png'
 
   // Handle zoom
   const handleZoom = useCallback((direction: 'in' | 'out') => {
@@ -192,6 +242,14 @@ export default function RealPlotMap() {
 
   // Mouse handlers for panning
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isAddMode) {
+      // In add mode, clicking captures coordinates
+      e.preventDefault()
+      e.stopPropagation()
+      handleMapClick(e)
+      return
+    }
+    
     if (e.button === 0 && !e.currentTarget.closest('rect')) {
       setIsDragging(true)
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
@@ -199,7 +257,7 @@ export default function RealPlotMap() {
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
+    if (isDragging && !isAddMode) {
       setPan({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
@@ -209,6 +267,149 @@ export default function RealPlotMap() {
 
   const handleMouseUp = () => {
     setIsDragging(false)
+  }
+
+  // Handle map click in add mode
+  const handleMapClick = (e: React.MouseEvent) => {
+    if (!isAddMode) return
+    
+    const mapContainer = mapRef.current
+    if (!mapContainer) return
+    
+    const rect = mapContainer.getBoundingClientRect()
+    const containerWidth = rect.width
+    const containerHeight = rect.height
+    
+    // Get click position relative to container
+    const clickX = e.clientX - rect.left
+    const clickY = e.clientY - rect.top
+    
+    // Get the transformed container (accounts for pan/zoom)
+    const transformedContainer = mapContainer.querySelector('div[style*="transform"]') as HTMLElement
+    if (!transformedContainer) return
+    
+    // Calculate the actual image display dimensions (object-contain maintains aspect ratio)
+    const imageWidth = newPlotData.imageWidth
+    const imageHeight = newPlotData.imageHeight
+    const imageAspect = imageWidth / imageHeight
+    const containerAspect = containerWidth / containerHeight
+    
+    let displayWidth: number
+    let displayHeight: number
+    let offsetX = 0
+    let offsetY = 0
+    
+    if (imageAspect > containerAspect) {
+      // Image is wider - fits to width
+      displayWidth = containerWidth
+      displayHeight = containerWidth / imageAspect
+      offsetY = (containerHeight - displayHeight) / 2
+    } else {
+      // Image is taller - fits to height
+      displayHeight = containerHeight
+      displayWidth = containerHeight * imageAspect
+      offsetX = (containerWidth - displayWidth) / 2
+    }
+    
+    // Account for pan and zoom
+    const centerX = containerWidth / 2
+    const centerY = containerHeight / 2
+    
+    // Transform click coordinates
+    const relativeX = (clickX - centerX - pan.x) / zoom + centerX
+    const relativeY = (clickY - centerY - pan.y) / zoom + centerY
+    
+    // Convert to image pixel coordinates
+    const pixelX = Math.max(0, Math.min(imageWidth, ((relativeX - offsetX) / displayWidth) * imageWidth))
+    const pixelY = Math.max(0, Math.min(imageHeight, ((relativeY - offsetY) / displayHeight) * imageHeight))
+    
+    // Default plot size (can be adjusted in form)
+    const defaultWidth = 100
+    const defaultHeight = 80
+    
+    setClickedPoint({ x: pixelX, y: pixelY })
+    
+    // Set image bounds
+    const bounds = {
+      x: Math.max(0, pixelX - defaultWidth / 2),
+      y: Math.max(0, pixelY - defaultHeight / 2),
+      width: defaultWidth,
+      height: defaultHeight
+    }
+    
+    setNewPlotData(prev => ({
+      ...prev,
+      imageBounds: JSON.stringify(bounds),
+      coordinates: `${bounds.x},${bounds.y}`,
+      mapX: (bounds.x / imageWidth) * 100,
+      mapY: (bounds.y / imageHeight) * 100,
+    }))
+    
+    setShowAddForm(true)
+  }
+
+  // Save new plot
+  const handleSavePlot = async () => {
+    if (!newPlotData.plotNumber || !newPlotData.block) {
+      alert('Please fill in plot number and block')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const token = localStorage.getItem('access_token')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
+      
+      const plotPayload = {
+        ...newPlotData,
+        sizeSqm: newPlotData.sizeMarla * 25.29, // Auto-calculate
+      }
+      
+      const response = await fetch(`${apiUrl}/plots`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(plotPayload),
+      })
+
+      if (response.ok) {
+        await fetchPlots()
+        setIsAddMode(false)
+        setShowAddForm(false)
+        setClickedPoint(null)
+        setNewPlotData({
+          plotNumber: '',
+          block: '',
+          phase: '1',
+          sizeMarla: 5.0,
+          sizeSqm: 126.45,
+          pricePkr: 0,
+          status: 'available',
+          imageBounds: '',
+          imagePath: '/plot-map.png',
+          imageWidth: 2068,
+          imageHeight: 1312,
+        })
+        alert('Plot added successfully!')
+      } else {
+        const error = await response.json()
+        alert(`Failed to add plot: ${error.message || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error saving plot:', error)
+      alert('An error occurred while saving the plot')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Cancel add mode
+  const handleCancelAdd = () => {
+    setIsAddMode(false)
+    setShowAddForm(false)
+    setClickedPoint(null)
   }
 
   // Keyboard shortcuts
@@ -350,6 +551,29 @@ export default function RealPlotMap() {
             >
               <RefreshCw className="h-5 w-5" />
             </button>
+
+            {/* Add Plot Button */}
+            <button
+              onClick={() => setIsAddMode(!isAddMode)}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                isAddMode 
+                  ? 'bg-red-600 text-white hover:bg-red-700' 
+                  : 'bg-primary-600 text-white hover:bg-primary-700'
+              }`}
+              title={isAddMode ? "Cancel Add Plot" : "Add Plot"}
+            >
+              {isAddMode ? (
+                <>
+                  <X className="h-5 w-5" />
+                  <span>Cancel</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="h-5 w-5" />
+                  <span>Add Plot</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -381,10 +605,20 @@ export default function RealPlotMap() {
         </div>
       </div>
 
-      {/* Map Container */}
-      <div className="relative bg-gradient-to-br from-emerald-50 to-blue-50" style={{ height: '75vh' }}>
-        {/* Map Controls */}
-        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+        {/* Map Container */}
+        <div className="relative bg-gradient-to-br from-emerald-50 to-blue-50" style={{ height: '75vh' }}>
+          {/* Add Mode Indicator */}
+          {isAddMode && (
+            <div className="absolute top-4 left-4 z-30 bg-primary-600 text-white px-4 py-2 rounded-lg shadow-lg">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                <span className="font-semibold">Click on the map to add a plot</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Map Controls */}
+          <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
           <button
             onClick={() => handleZoom('in')}
             className="p-3 bg-white rounded-lg shadow-lg hover:bg-gray-50 transition-all hover:shadow-xl"
@@ -423,7 +657,7 @@ export default function RealPlotMap() {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          style={{ cursor: isAddMode ? 'crosshair' : (isDragging ? 'grabbing' : 'grab') }}
         >
           <div
             className="relative w-full h-full"
@@ -436,7 +670,7 @@ export default function RealPlotMap() {
             {/* Background Map Images */}
             <div className="absolute inset-0 w-full h-full">
               <Image
-                src="/queen-hills-map.png"
+                src={mapImagePath}
                 alt="Queen Hills Murree Master Plan"
                 fill
                 className="object-contain"
@@ -709,6 +943,152 @@ export default function RealPlotMap() {
           </div>
         </div>
       </div>
+
+      {/* Add Plot Form Modal */}
+      <AnimatePresence>
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6 border-b">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900">Add New Plot</h2>
+                  <button
+                    onClick={handleCancelAdd}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  Plot location: ({clickedPoint?.x.toFixed(0)}, {clickedPoint?.y.toFixed(0)})
+                </p>
+              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleSavePlot(); }} className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Plot Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={newPlotData.plotNumber}
+                      onChange={(e) => setNewPlotData(prev => ({ ...prev, plotNumber: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g., A-01"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Block *
+                    </label>
+                    <input
+                      type="text"
+                      value={newPlotData.block}
+                      onChange={(e) => setNewPlotData(prev => ({ ...prev, block: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g., A"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phase *
+                    </label>
+                    <input
+                      type="text"
+                      value={newPlotData.phase}
+                      onChange={(e) => setNewPlotData(prev => ({ ...prev, phase: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                      placeholder="1"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={newPlotData.status}
+                      onChange={(e) => setNewPlotData(prev => ({ ...prev, status: e.target.value as any }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="available">Available</option>
+                      <option value="reserved">Reserved</option>
+                      <option value="sold">Sold</option>
+                      <option value="transferred">Transferred</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Size (Marla) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={newPlotData.sizeMarla}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0
+                        setNewPlotData(prev => ({
+                          ...prev,
+                          sizeMarla: val,
+                          sizeSqm: val * 25.29
+                        }))
+                      }}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Price (PKR) *
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={newPlotData.pricePkr}
+                      onChange={(e) => setNewPlotData(prev => ({ ...prev, pricePkr: parseFloat(e.target.value) || 0 }))}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCancelAdd}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                  >
+                    <Save className="h-4 w-4" />
+                    {isSaving ? 'Saving...' : 'Save Plot'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

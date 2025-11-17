@@ -30,6 +30,21 @@ interface Plot {
   updatedAt: string;
 }
 
+interface OwnershipHistory {
+  id: string;
+  ownershipType: string;
+  salePrice?: number;
+  registrationDate?: string;
+  registrationNumber?: string;
+  transferDate?: string;
+  transferDocumentNumber?: string;
+  customer?: {
+    id: string;
+    fullName: string;
+  };
+  createdAt: string;
+}
+
 export default function ViewPlotPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -38,6 +53,8 @@ export default function ViewPlotPage() {
   
   const [plot, setPlot] = useState<Plot | null>(null);
   const [isLoadingPlot, setIsLoadingPlot] = useState(true);
+  const [ownershipHistory, setOwnershipHistory] = useState<OwnershipHistory[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   if (isLoading) {
     return (
@@ -55,13 +72,38 @@ export default function ViewPlotPage() {
   useEffect(() => {
     if (isAuthenticated && plotId) {
       fetchPlot();
+      fetchOwnershipHistory();
     }
   }, [isAuthenticated, plotId]);
+
+  const fetchOwnershipHistory = async () => {
+    try {
+      setIsLoadingHistory(true);
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      
+      const response = await fetch(`${apiUrl}/plots/${plotId}/ownership-history`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOwnershipHistory(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching ownership history:', error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const fetchPlot = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       
       const response = await fetch(`${apiUrl}/plots/${plotId}`, {
         headers: {
@@ -336,7 +378,77 @@ export default function ViewPlotPage() {
               </div>
             </div>
           </div>
+
+          {/* Actions */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push(`/dashboard/plots/${plotId}/record-sale`)}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+              >
+                Record Sale
+              </button>
+              <button
+                onClick={() => router.push(`/dashboard/plots/${plotId}/record-transfer`)}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+              >
+                Record Transfer
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Ownership History */}
+      <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Ownership History</h3>
+        {isLoadingHistory ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+          </div>
+        ) : ownershipHistory.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No ownership history recorded
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registration/Document</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {ownershipHistory.map((record) => (
+                  <tr key={record.id}>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">
+                        {record.ownershipType.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {record.customer?.fullName || 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {record.salePrice ? formatCurrency(record.salePrice) : 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {record.registrationNumber || record.transferDocumentNumber || 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {new Date(record.registrationDate || record.transferDate || record.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -660,10 +660,10 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Customer Satisfaction</span>
-              <span className="text-sm font-medium text-gray-900">{stats?.customerSatisfaction || 0}%</span>
+              <span className="text-sm font-medium text-gray-900">{Math.min(100, stats?.customerSatisfaction || 0)}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-green-600 h-2 rounded-full" style={{ width: `${stats?.customerSatisfaction || 0}%` }}></div>
+              <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(100, stats?.customerSatisfaction || 0)}%` }}></div>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Project Completion</span>

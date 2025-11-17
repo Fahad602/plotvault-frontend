@@ -12,8 +12,12 @@ import {
   Calendar,
   FileText,
   Edit,
+  DollarSign,
+  CheckCircle,
+  Clock,
 } from 'lucide-react';
 import CustomerBookings from '@/components/CustomerBookings';
+import { formatPKR } from '@/utils/currency';
 
 interface Customer {
   id: string;
@@ -36,6 +40,8 @@ export default function ViewCustomerPage() {
   
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [isLoadingCustomer, setIsLoadingCustomer] = useState(true);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -46,13 +52,61 @@ export default function ViewCustomerPage() {
   useEffect(() => {
     if (isAuthenticated && customerId) {
       fetchCustomer();
+      fetchCustomerPayments();
     }
   }, [isAuthenticated, customerId]);
+
+  const fetchCustomerPayments = async () => {
+    try {
+      setIsLoadingPayments(true);
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
+      // Get customer bookings first
+      const bookingsResponse = await fetch(`${apiUrl}/bookings?limit=1000`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (bookingsResponse.ok) {
+        const bookingsData = await bookingsResponse.json();
+        const customerBookings = (bookingsData.data || []).filter((b: any) => b.customerId === customerId);
+
+        // Get payments for each booking
+        const allPayments: any[] = [];
+        for (const booking of customerBookings) {
+          try {
+            const paymentsResponse = await fetch(`${apiUrl}/payments/booking/${booking.id}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (paymentsResponse.ok) {
+              const bookingPayments = await paymentsResponse.json();
+              allPayments.push(...(bookingPayments || []));
+            }
+          } catch (error) {
+            console.error('Error fetching payments for booking:', error);
+          }
+        }
+
+        setPayments(allPayments);
+      }
+    } catch (error) {
+      console.error('Error fetching customer payments:', error);
+    } finally {
+      setIsLoadingPayments(false);
+    }
+  };
 
   const fetchCustomer = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
       
       const response = await fetch(`${apiUrl}/customers/${customerId}`, {
         headers: {
@@ -203,6 +257,63 @@ export default function ViewCustomerPage() {
 
       {/* Customer Bookings */}
       <CustomerBookings customerId={customerId} />
+
+      {/* Payment History */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment History</h3>
+        {isLoadingPayments ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No payment history available
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {payments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      {formatPKR(payment.amount)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 capitalize">
+                      {payment.paymentMethod?.replace('_', ' ') || '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                        payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {payment.status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {payment.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                        {payment.status || 'unknown'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {payment.referenceNumber || payment.transactionId || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -76,9 +76,12 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
       <div className="min-h-screen bg-gray-50">
         <DashboardHeader />
         <div className="flex">
+          <div className="w-72 flex-shrink-0"></div>
           <DashboardSidebar />
-          <main className="flex-1 p-6">
-            {children}
+          <main className="flex-1 ml-1 mr-4 pt-24 pb-6 pl-6 pr-6 min-h-[calc(100vh-6rem)]">
+            <div className="w-full">
+              {children}
+            </div>
           </main>
         </div>
       </div>
