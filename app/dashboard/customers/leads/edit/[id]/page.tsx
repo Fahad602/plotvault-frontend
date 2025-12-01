@@ -47,6 +47,7 @@ interface Lead {
     email: string;
   };
   nextFollowUpAt: string;
+  dueDate?: string;
   tags: string[];
 }
 
