@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       case 'admin':
         return '/dashboard';
       case 'sales_manager':
-        return '/dashboard';
+        return '/dashboard/sales';
       case 'sales_person':
         return '/dashboard/sales';
       case 'accountant':

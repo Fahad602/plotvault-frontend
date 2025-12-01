@@ -26,6 +26,7 @@ import {
   FileText,
   Users,
 } from 'lucide-react';
+import ActivityTimeline from '@/components/leads/ActivityTimeline';
 
 interface Lead {
   id: string;
@@ -900,6 +901,11 @@ export default function ViewLeadPage() {
               </div>
             </div>
           )}
+
+          {/* Activity Timeline */}
+          <div className="col-span-full">
+            <ActivityTimeline leadId={lead.id} title="Lead Activity Timeline" />
+          </div>
         </div>
       </div>
     </div>

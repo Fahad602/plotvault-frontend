@@ -26,6 +26,7 @@ import {
   Upload,
   ChevronDown,
   Flag,
+  Activity,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import CSVUpload from '@/components/CSVUpload';
@@ -37,20 +38,33 @@ interface User {
   role: string;
 }
 
+interface LeadStatus {
+  id: string;
+  name: string;
+  displayName: string;
+  color: string;
+  order: number;
+  isActive: boolean;
+  isDefault: boolean;
+}
+
 interface Lead {
   id: string;
+  leadId?: string; // Unique identifier from CSV or auto-generated
   fullName: string;
   email: string;
   phone: string;
   source: string;
   sourceDetails: string;
-  status: 'new' | 'contacted' | 'qualified' | 'interested' | 'not_interested' | 'follow_up' | 'converted' | 'lost';
+  status: string;
+  statusId?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   initialNotes: string;
   interests: string;
   budgetRange: number;
   preferredContactMethod: string;
   preferredContactTime: string;
+  dueDate?: string;
   assignedToUser: {
     id: string;
     fullName: string;
@@ -69,19 +83,27 @@ interface Lead {
 interface LeadStats {
   totalLeads: number;
   newLeads: number;
-  contactedLeads: number;
-  qualifiedLeads: number;
-  convertedLeads: number;
-  lostLeads: number;
+  notInterestedLeads: number;
+  interestedLeads: number;
+  willVisitLeads: number;
+  futureLeads: number;
+  closeWonLeads: number;
+  inProcessLeads: number;
   conversionRate: number;
 }
 
-const statusColors = {
+// Status colors will be fetched from database, but we keep a fallback
+const statusColors: Record<string, string> = {
   new: 'bg-blue-100 text-blue-800',
+  not_interested: 'bg-red-100 text-red-800',
+  interested: 'bg-green-100 text-green-800',
+  will_visit: 'bg-yellow-100 text-yellow-800',
+  future: 'bg-purple-100 text-purple-800',
+  close_won: 'bg-emerald-100 text-emerald-800',
+  in_process: 'bg-cyan-100 text-cyan-800',
+  // Legacy statuses (for backward compatibility)
   contacted: 'bg-yellow-100 text-yellow-800',
   qualified: 'bg-green-100 text-green-800',
-  interested: 'bg-purple-100 text-purple-800',
-  not_interested: 'bg-red-100 text-red-800',
   follow_up: 'bg-orange-100 text-orange-800',
   converted: 'bg-emerald-100 text-emerald-800',
   lost: 'bg-gray-100 text-gray-800',
@@ -212,6 +234,145 @@ interface PriorityDropdownProps {
   onUpdatePriority: (leadId: string, newPriority: string) => void;
 }
 
+// StatusDropdown Component
+interface StatusDropdownProps {
+  lead: Lead;
+  leadStatuses: LeadStatus[];
+  onUpdateStatus: (leadId: string, statusId: string) => void;
+}
+
+function StatusDropdown({ lead, leadStatuses, onUpdateStatus }: StatusDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const currentStatus = leadStatuses.find(s => s.id === lead.statusId) || 
+    leadStatuses.find(s => s.name === lead.status) ||
+    leadStatuses[0];
+
+  const handleStatusSelect = (statusId: string) => {
+    if (statusId !== lead.statusId) {
+      onUpdateStatus(lead.id, statusId);
+    }
+    setIsOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.status-dropdown-container')) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // If no statuses loaded yet, show loading state
+  if (leadStatuses.length === 0) {
+    return (
+      <span className="text-sm text-gray-500">Loading...</span>
+    );
+  }
+
+  // If no current status found, show the lead's status as fallback
+  if (!currentStatus) {
+    return (
+      <div className="relative status-dropdown-container">
+        <div
+          className="flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div 
+            className="w-3 h-3 rounded-full mr-2 bg-gray-400"
+          ></div>
+          <span className="text-sm text-gray-900 capitalize">
+            {lead.status?.replace('_', ' ') || 'Unknown'}
+          </span>
+          <ChevronDown className="w-3 h-3 text-gray-400 ml-1" />
+        </div>
+        
+        {isOpen && (
+          <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg">
+            <div className="max-h-48 overflow-y-auto">
+              {leadStatuses.map((status) => (
+                <div
+                  key={status.id}
+                  className="px-2 py-1 text-xs hover:bg-gray-100 cursor-pointer flex items-center"
+                  onClick={() => handleStatusSelect(status.id)}
+                >
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2"
+                    style={{ backgroundColor: status.color }}
+                  ></div>
+                  <span className={lead.statusId === status.id ? 'font-medium text-blue-600' : ''}>
+                    {status.displayName}
+                  </span>
+                  {lead.statusId === status.id && (
+                    <div className="ml-auto">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative status-dropdown-container">
+      <div
+        className="flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div 
+          className="w-3 h-3 rounded-full mr-2"
+          style={{ backgroundColor: currentStatus.color || '#6B7280' }}
+        ></div>
+        <span className="text-sm text-gray-900">
+          {currentStatus.displayName}
+        </span>
+        <ChevronDown className="w-3 h-3 text-gray-400 ml-1" />
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded-lg shadow-lg">
+          <div className="max-h-48 overflow-y-auto">
+            {leadStatuses.map((status) => (
+              <div
+                key={status.id}
+                className="px-2 py-1 text-xs hover:bg-gray-100 cursor-pointer flex items-center"
+                onClick={() => handleStatusSelect(status.id)}
+              >
+                <div 
+                  className="w-3 h-3 rounded-full mr-2"
+                  style={{ backgroundColor: status.color }}
+                ></div>
+                <span className={lead.statusId === status.id ? 'font-medium text-blue-600' : ''}>
+                  {status.displayName}
+                </span>
+                {lead.statusId === status.id && (
+                  <div className="ml-auto">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PriorityDropdown({ lead, onUpdatePriority }: PriorityDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -305,6 +466,7 @@ export default function LeadsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [showCSVUpload, setShowCSVUpload] = useState(false);
   const [salesAgents, setSalesAgents] = useState<User[]>([]);
+  const [leadStatuses, setLeadStatuses] = useState<LeadStatus[]>([]);
 
   useEffect(() => {
     console.log('🔄 useEffect triggered:', {
@@ -324,6 +486,7 @@ export default function LeadsPage() {
       console.log('✅ Conditions met, fetching data...');
       fetchLeads();
       fetchStats();
+      fetchLeadStatuses(); // Fetch statuses for all users
       
       // Fetch sales agents for managers
       if (user?.role === 'admin' || user?.role === 'sales_manager') {
@@ -510,6 +673,84 @@ export default function LeadsPage() {
     }
   };
 
+  const fetchLeadStatuses = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/leads/statuses`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Fetched lead statuses:', data);
+        setLeadStatuses(data || []);
+      } else {
+        console.error('❌ Failed to fetch lead statuses:', response.status, response.statusText);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error details:', errorData);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching lead statuses:', error);
+    }
+  };
+
+  const updateLeadStatus = async (leadId: string, statusId: string) => {
+    try {
+      // Validate inputs
+      if (!leadId || !statusId) {
+        console.error('❌ Missing leadId or statusId:', { leadId, statusId });
+        alert('Missing required information to update status');
+        return;
+      }
+
+      // Validate UUID format (basic check)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(leadId)) {
+        console.error('❌ Invalid leadId format:', leadId);
+        alert('Invalid lead ID format');
+        return;
+      }
+      if (!uuidRegex.test(statusId)) {
+        console.error('❌ Invalid statusId format:', statusId);
+        alert('Invalid status ID format');
+        return;
+      }
+
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      console.log('🔄 Updating lead status:', { leadId, statusId });
+      
+      const response = await fetch(`${apiUrl}/leads/${leadId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          statusId,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Lead status updated successfully');
+        // Refresh the leads list
+        fetchLeads();
+        fetchStats();
+      } else {
+        const error = await response.json();
+        console.error('❌ Failed to update lead status:', error);
+        alert(error.message || 'Failed to update lead status');
+      }
+    } catch (error) {
+      console.error('❌ Error updating lead status:', error);
+      alert('Error updating lead status');
+    }
+  };
+
   const reassignLead = async (leadId: string, newAgentId: string) => {
     try {
       const token = localStorage.getItem('access_token');
@@ -620,9 +861,9 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Lead Management</h1>
           <p className="text-gray-600">Manage your sales leads and track conversions</p>
@@ -666,7 +907,7 @@ export default function LeadsPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 w-full" style={{ maxWidth: '100%' }}>
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center justify-between">
               <div>
@@ -688,37 +929,55 @@ export default function LeadsPage() {
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Contacted</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.contactedLeads}</p>
-              </div>
-              <Phone className="w-8 h-8 text-yellow-600" />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Qualified</p>
-                <p className="text-2xl font-bold text-green-600">{stats.qualifiedLeads}</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Converted</p>
-                <p className="text-2xl font-bold text-emerald-600">{stats.convertedLeads}</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-emerald-600" />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Lost</p>
-                <p className="text-2xl font-bold text-red-600">{stats.lostLeads}</p>
+                <p className="text-sm text-gray-600">Not Interested</p>
+                <p className="text-2xl font-bold text-red-600">{stats.notInterestedLeads}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Interested</p>
+                <p className="text-2xl font-bold text-green-600">{stats.interestedLeads}</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Will Visit</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.willVisitLeads}</p>
+              </div>
+              <Calendar className="w-8 h-8 text-yellow-600" />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Future</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.futureLeads}</p>
+              </div>
+              <Clock className="w-8 h-8 text-purple-600" />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Close Won</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.closeWonLeads}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-emerald-600" />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">In Process</p>
+                <p className="text-2xl font-bold text-cyan-600">{stats.inProcessLeads}</p>
+              </div>
+              <Activity className="w-8 h-8 text-cyan-600" />
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm border">
@@ -734,8 +993,8 @@ export default function LeadsPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="bg-white p-4 rounded-lg shadow-sm border w-full" style={{ maxWidth: '100%' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 w-full" style={{ maxWidth: '100%' }}>
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
             <input
@@ -752,14 +1011,11 @@ export default function LeadsPage() {
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">All Statuses</option>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="qualified">Qualified</option>
-            <option value="interested">Interested</option>
-            <option value="not_interested">Not Interested</option>
-            <option value="follow_up">Follow Up</option>
-            <option value="converted">Converted</option>
-            <option value="lost">Lost</option>
+            {leadStatuses.map((status) => (
+              <option key={status.id} value={status.name}>
+                {status.displayName}
+              </option>
+            ))}
           </select>
           <select
             value={sourceFilter}
@@ -806,7 +1062,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Leads Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
         {isLoadingLeads ? (
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -820,32 +1076,41 @@ export default function LeadsPage() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div 
+            className="overflow-x-auto" 
+            style={{ 
+              width: '100%', 
+              maxWidth: '100%',
+              overflowX: 'auto',
+              overflowY: 'visible',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            <table className="w-full" style={{ minWidth: '850px', tableLayout: 'auto' }}>
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Lead Info
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Source
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Priority
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Assigned To
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Last Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -855,16 +1120,36 @@ export default function LeadsPage() {
                   const SourceIcon = sourceIcons[lead.source as keyof typeof sourceIcons] || AlertCircle;
                   return (
                     <tr key={lead.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-2 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{lead.fullName}</div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="text-sm font-medium text-gray-900">{lead.fullName}</div>
+                            {lead.leadId && (
+                              <span className="text-xs font-mono text-gray-500 bg-gray-100 px-1 py-0.5 rounded">
+                                {lead.leadId}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-sm text-gray-500">
                             Created {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
                           </div>
+                          {lead.dueDate && (
+                            <div className={`text-xs mt-1 ${
+                              new Date(lead.dueDate) < new Date() 
+                                ? 'text-red-600 font-medium' 
+                                : new Date(lead.dueDate).toDateString() === new Date().toDateString()
+                                ? 'text-orange-600 font-medium'
+                                : 'text-gray-500'
+                            }`}>
+                              Due: {new Date(lead.dueDate).toLocaleDateString()}
+                              {new Date(lead.dueDate) < new Date() && ' (Overdue)'}
+                              {new Date(lead.dueDate).toDateString() === new Date().toDateString() && ' (Today)'}
+                            </div>
+                          )}
                           {lead.tags && lead.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
+                            <div className="flex flex-wrap gap-0.5 mt-1">
                               {lead.tags.slice(0, 2).map((tag, index) => (
-                                <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                <span key={index} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                                   {tag}
                                 </span>
                               ))}
@@ -875,25 +1160,25 @@ export default function LeadsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-2 whitespace-nowrap">
                         <div className="space-y-1">
                           {lead.email && (
                             <div className="flex items-center text-sm text-gray-600">
-                              <Mail className="w-3 h-3 mr-1" />
+                              <Mail className="w-3 h-3 mr-1.5" />
                               {lead.email}
                             </div>
                           )}
                           {lead.phone && (
                             <div className="flex items-center text-sm text-gray-600">
-                              <Phone className="w-3 h-3 mr-1" />
+                              <Phone className="w-3 h-3 mr-1.5" />
                               {lead.phone}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-2 whitespace-nowrap">
                         <div className="flex items-center">
-                          <SourceIcon className="w-4 h-4 text-gray-400 mr-2" />
+                          <SourceIcon className="w-4 h-4 text-gray-400 mr-1.5" />
                           <div>
                             <div className="text-sm font-medium text-gray-900 capitalize">
                               {lead.source.replace('_', ' ')}
@@ -915,19 +1200,27 @@ export default function LeadsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusColors[lead.status]}`}>
-                          {getStatusIcon(lead.status)}
-                          <span className="ml-1">{lead.status.replace('_', ' ')}</span>
-                        </span>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {leadStatuses.length > 0 ? (
+                          <StatusDropdown
+                            lead={lead}
+                            leadStatuses={leadStatuses}
+                            onUpdateStatus={updateLeadStatus}
+                          />
+                        ) : (
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusColors[lead.status] || 'bg-gray-100 text-gray-800'}`}>
+                            {getStatusIcon(lead.status)}
+                            <span className="ml-1">{lead.status.replace('_', ' ')}</span>
+                          </span>
+                        )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-2 whitespace-nowrap">
                         <PriorityDropdown
                           lead={lead}
                           onUpdatePriority={updateLeadPriority}
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-2 whitespace-nowrap">
                         {(user?.role === 'admin' || user?.role === 'sales_manager') ? (
                           <AgentDropdown
                             lead={lead}
@@ -945,7 +1238,7 @@ export default function LeadsPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-2 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {lead.lastContactedAt ? formatDistanceToNow(new Date(lead.lastContactedAt), { addSuffix: true }) : 'Never'}
                         </div>
@@ -956,25 +1249,30 @@ export default function LeadsPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1.5">
                           <button
                             onClick={() => router.push(`/dashboard/customers/leads/view/${lead.id}`)}
                             className="text-blue-600 hover:text-blue-900"
+                            title="View Lead"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => router.push(`/dashboard/customers/leads/edit/${lead.id}`)}
                             className="text-green-600 hover:text-green-900"
+                            title="Edit Lead"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDeleteLead(lead.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {(user?.role === 'admin' || user?.role === 'sales_manager') && (
+                            <button
+                              onClick={() => handleDeleteLead(lead.id)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete Lead"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

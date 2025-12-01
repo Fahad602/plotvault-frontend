@@ -77,6 +77,7 @@ export default function EditLeadPage() {
     preferredContactTime: 'morning',
     assignedToUserId: '',
     nextFollowUpAt: '',
+    dueDate: '',
     tags: [] as string[],
   });
   const [tagInput, setTagInput] = useState('');
@@ -133,6 +134,7 @@ export default function EditLeadPage() {
           preferredContactTime: lead.preferredContactTime || 'morning',
           assignedToUserId: lead.assignedToUserId || '',
           nextFollowUpAt: lead.nextFollowUpAt ? new Date(lead.nextFollowUpAt).toISOString().slice(0, 16) : '',
+          dueDate: lead.dueDate ? new Date(lead.dueDate).toISOString().slice(0, 10) : '',
           tags: lead.tags || [],
         });
         
@@ -191,6 +193,7 @@ export default function EditLeadPage() {
         ...formData,
         budgetRange: formData.budgetRange ? parseFloat(formData.budgetRange) : null,
         nextFollowUpAt: formData.nextFollowUpAt ? new Date(formData.nextFollowUpAt).toISOString() : null,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString().split('T')[0] : null,
       };
 
 
@@ -554,6 +557,26 @@ export default function EditLeadPage() {
                   />
                 </div>
               </div>
+              {/* Only show due date field for managers and admins */}
+              {isSalesManager && (
+                <div>
+                  <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date
+                  </label>
+                  <div className="relative">
+                    <Clock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                    <input
+                      type="date"
+                      id="dueDate"
+                      name="dueDate"
+                      value={formData.dueDate}
+                      onChange={handleInputChange}
+                      className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Set a follow-up due date (not editable by sales person)</p>
+                </div>
+              )}
             </div>
           </div>
 

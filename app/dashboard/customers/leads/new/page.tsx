@@ -41,6 +41,7 @@ export default function NewLeadPage() {
     preferredContactMethod: 'phone',
     preferredContactTime: 'morning',
     assignedToUserId: '',
+    dueDate: '',
     tags: [] as string[],
   });
   const [tagInput, setTagInput] = useState('');
@@ -92,6 +93,7 @@ export default function NewLeadPage() {
         ...formData,
         budgetRange: formData.budgetRange ? parseFloat(formData.budgetRange) : null,
         generatedByUserId: user?.id,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString().split('T')[0] : null,
       };
 
       const response = await fetch(`${apiUrl}/leads`, {

@@ -93,8 +93,43 @@ export default function TeamManagement() {
     }
   };
 
+  const handleToggleActive = async (memberId: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+    const action = newStatus ? 'activate' : 'deactivate';
+    
+    if (!confirm(`Are you sure you want to ${action} this team member?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+      const response = await fetch(`${apiUrl}/sales-team/members/${memberId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isActive: newStatus
+        }),
+      });
+
+      if (response.ok) {
+        await fetchTeamData(); // Refresh data
+        alert(`Team member ${action}d successfully`);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Failed to ${action} team member: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing team member:`, error);
+      alert(`Error ${action}ing team member`);
+    }
+  };
+
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Are you sure you want to remove this team member?')) {
+    if (!confirm('Are you sure you want to remove this team member? This will deactivate them.')) {
       return;
     }
 
@@ -178,6 +213,18 @@ export default function TeamManagement() {
 
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <XCircle className="h-6 w-6 text-gray-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Inactive Members</p>
+                  <p className="text-2xl font-bold text-gray-900">{teamStats.totalMembers - teamStats.activeMembers}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
                 <div className="p-2 bg-orange-100 rounded-lg">
                   <BarChart3 className="h-6 w-6 text-orange-600" />
                 </div>
@@ -236,7 +283,10 @@ export default function TeamManagement() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {teamMembers.map((member) => (
-                      <tr key={member.id}>
+                      <tr 
+                        key={member.id}
+                        className={member.isActive ? '' : 'bg-gray-50 opacity-75'}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
@@ -275,16 +325,27 @@ export default function TeamManagement() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            member.isActive 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                          <button
+                            onClick={() => handleToggleActive(member.id, member.isActive)}
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
+                              member.isActive 
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                            }`}
+                            title={member.isActive ? 'Click to deactivate' : 'Click to activate'}
+                          >
                             {member.isActive ? 'Active' : 'Inactive'}
-                          </span>
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
+                            <button
+                              onClick={() => router.push(`/dashboard/team/${member.id}/activity`)}
+                              className="text-purple-600 hover:text-purple-900"
+                              title="View Activity Timeline"
+                            >
+                              <Activity className="h-4 w-4" />
+                            </button>
                             <button
                               onClick={() => router.push(`/dashboard/team/${member.id}`)}
                               className="text-green-600 hover:text-green-900"
