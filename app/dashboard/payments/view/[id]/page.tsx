@@ -21,7 +21,7 @@ interface PaymentSchedule {
   id: string;
   bookingId: string;
   paymentType: 'full_payment' | 'installment';
-  status: 'active' | 'completed' | 'cancelled' | 'suspended';
+  status?: 'active' | 'completed' | 'cancelled' | 'suspended' | null;
   totalAmount: number;
   downPayment: number;
   paidAmount: number;
@@ -122,7 +122,7 @@ export default function ViewPaymentSchedulePage() {
     }).format(amount);
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status?: string | null) => {
     switch (status) {
       case 'active':
         return <Clock className="h-5 w-5 text-blue-600" />;
@@ -137,7 +137,7 @@ export default function ViewPaymentSchedulePage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string | null) => {
     switch (status) {
       case 'active':
         return 'bg-blue-100 text-blue-800';
@@ -220,7 +220,7 @@ export default function ViewPaymentSchedulePage() {
             <div className="flex items-center space-x-2">
               {getStatusIcon(schedule.status)}
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(schedule.status)}`}>
-                {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
+                {schedule.status ? (schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)) : 'Unknown'}
               </span>
             </div>
           </div>
