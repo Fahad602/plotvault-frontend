@@ -157,7 +157,15 @@ export default function NewBookingPage() {
   };
 
   const validateForm = (): boolean => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:159',message:'validateForm entry',data:{formData,paymentType:formData.paymentType,downPayment:formData.downPayment,paidAmount:formData.paidAmount,totalAmount:formData.totalAmount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     const newErrors: Partial<BookingFormData> = {};
+
+    // Convert to numbers for proper comparison
+    const downPaymentNum = typeof formData.downPayment === 'string' ? parseFloat(formData.downPayment) : Number(formData.downPayment) || 0;
+    const totalAmountNum = typeof formData.totalAmount === 'string' ? parseFloat(formData.totalAmount) : Number(formData.totalAmount) || 0;
+    const paidAmountNum = typeof formData.paidAmount === 'string' ? parseFloat(formData.paidAmount) : Number(formData.paidAmount) || 0;
 
     if (!formData.customerId) {
       newErrors.customerId = 'Customer is required';
@@ -167,25 +175,29 @@ export default function NewBookingPage() {
       newErrors.plotId = 'Plot is required';
     }
 
-    if (formData.downPayment < 0) {
+    if (downPaymentNum < 0) {
       newErrors.downPayment = 'Down payment cannot be negative' as any;
     }
 
-    if (formData.totalAmount <= 0) {
+    if (totalAmountNum <= 0) {
       newErrors.totalAmount = 'Total amount must be greater than 0' as any;
     }
 
-    if (formData.downPayment > formData.totalAmount) {
+    if (downPaymentNum > totalAmountNum) {
       newErrors.downPayment = 'Down payment cannot be greater than total amount' as any;
     }
 
-    if (formData.paidAmount < 0) {
+    if (paidAmountNum < 0) {
       newErrors.paidAmount = 'Initial payment cannot be negative' as any;
     }
 
-    if (formData.paidAmount > formData.totalAmount) {
+    if (paidAmountNum > totalAmountNum) {
       newErrors.paidAmount = 'Initial payment cannot be greater than total amount' as any;
     }
+
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:190',message:'Before installment validation',data:{paymentType:formData.paymentType,downPayment:downPaymentNum,paidAmount:paidAmountNum,totalAmount:totalAmountNum,errorsSoFar:Object.keys(newErrors)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     if (formData.paymentType === 'installment') {
       if (!formData.paymentPlanId) {
@@ -194,8 +206,14 @@ export default function NewBookingPage() {
       if (!formData.installmentCount || formData.installmentCount < 1) {
         newErrors.installmentCount = 'Installment count must be at least 1' as any;
       }
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:197',message:'Installment validation check',data:{downPayment:downPaymentNum,paidAmount:paidAmountNum,shouldRequirePaidAmount:downPaymentNum>0,currentErrors:Object.keys(newErrors)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
     }
 
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:199',message:'validateForm exit',data:{errors:newErrors,errorCount:Object.keys(newErrors).length,isValid:Object.keys(newErrors).length===0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -203,7 +221,14 @@ export default function NewBookingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:203',message:'handleSubmit entry',data:{formData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+
     if (!validateForm()) {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:206',message:'Validation failed, blocking submit',data:{errors},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       return;
     }
 
@@ -218,6 +243,10 @@ export default function NewBookingPage() {
         createdById: user?.id,
       };
       
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:220',message:'Sending request to backend',data:{requestBody},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      
       const response = await fetch(`${apiUrl}/bookings`, {
         method: 'POST',
         headers: {
@@ -227,11 +256,19 @@ export default function NewBookingPage() {
         body: JSON.stringify(requestBody),
       });
       
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:229',message:'Response received',data:{status:response.status,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      
       if (response.ok) {
         const successData = await response.json();
         router.push('/dashboard/bookings');
       } else {
         const errorData = await response.json();
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:234',message:'Backend error response',data:{errorData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         
         // Handle specific validation errors
         if (errorData.message && Array.isArray(errorData.message)) {
@@ -247,6 +284,9 @@ export default function NewBookingPage() {
         }
       }
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:249',message:'Exception caught',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       console.error('Error creating booking:', error);
       alert('An error occurred while creating the booking.');
     } finally {
@@ -263,6 +303,9 @@ export default function NewBookingPage() {
   };
 
   const handleNumberInputChange = (field: keyof BookingFormData, value: string) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:265',message:'handleNumberInputChange entry',data:{field,value,currentFormData:formData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     console.log(`=== NUMBER INPUT CHANGE: ${field} ===`);
     console.log('Input value:', value);
     console.log('Previous form data:', formData);
@@ -270,10 +313,16 @@ export default function NewBookingPage() {
     // Allow empty string, use parseInt for whole numbers to avoid precision issues
     const numericValue = value === '' ? 0 : parseInt(value, 10) || 0;
     
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:271',message:'Numeric conversion result',data:{originalValue:value,numericValue,isEmpty:value===''},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     console.log('Calculated numeric value:', numericValue);
     
     setFormData(prev => {
       const updated = { ...prev, [field]: numericValue };
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/c7c25835-cb2a-4279-8c31-ce35bd5734cb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'new/page.tsx:276',message:'Form data updated',data:{field,updatedValue:numericValue,updatedFormData:updated},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       console.log('Updated form data:', updated);
       return updated;
     });
